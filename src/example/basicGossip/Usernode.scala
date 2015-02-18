@@ -2,9 +2,11 @@ package example.basicGossip
 
 import peersim.core.GeneralNode
 import scala.collection.mutable.MutableList
+import peersim.core.ModifiableNode
 
-class Usernode(prefix: String) extends GeneralNode(prefix){
+class Usernode(prefix: String) extends ModifiableNode(prefix){
   
+ 
   val messageList = MutableList[Int]()
   
   def saveMessage(elem: Int) = {
@@ -21,4 +23,6 @@ class Usernode(prefix: String) extends GeneralNode(prefix){
     println()
   }
 
+
+  
 }

@@ -47,9 +47,12 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 	 * {@link peersim.edsim.CDScheduler} component in the configuration.
 	 */
 	public void nextCycle(Node node, int pid) {
+		System.out.println("PID " + pid);
+
+
 		// streamer
 		if (node.getIndex() == 0) {
-			System.out.println("streamer generating " + info);
+			//System.out.println("streamer generating " + info);
 			for (int i = 0; i < fanout; i++) {
 				Linkable linkable = (Linkable) node.getProtocol(FastConfig
 						.getLinkable(pid));

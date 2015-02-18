@@ -22,6 +22,11 @@ simulation.logtime CYCLE
 
 protocol.link peersim.core.IdleProtocol
 
+protocol.avg1 example.basicGossip.AltruisticProtocol
+protocol.avg1.linkable link
+protocol.avg1.step CYCLE
+protocol.avg1.transport tr
+
 protocol.avg example.basicGossip.BasicGossip
 protocol.avg.linkable link
 protocol.avg.step CYCLE
@@ -43,18 +48,16 @@ init.rndlink WireKOut
 init.rndlink.k 20
 init.rndlink.protocol link
 
-init.vals LinearDistribution
-init.vals.protocol avg
-init.vals.max SIZE
-init.vals.min 1
+init.vals ProtocolInitializer
+init.vals.protocol avg avg1
 
 init.sch CDScheduler
-init.sch.protocol avg
+init.sch.protocol avg avg1
 init.sch.randstart
+
+
 
 ################ control ==============================
 
 control.0 BasicGossipObserver
-#control.0.protocol avg
 control.0.step CYCLE
-
