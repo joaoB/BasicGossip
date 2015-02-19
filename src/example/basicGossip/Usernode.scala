@@ -7,7 +7,7 @@ import peersim.core.ModifiableNode
 class Usernode(prefix: String) extends ModifiableNode(prefix){
   
  
-  val messageList = MutableList[Int]()
+  var messageList = MutableList[Int]()
   
   def saveMessage(elem: Int) = {
     messageList.+=(elem)
@@ -23,6 +23,11 @@ class Usernode(prefix: String) extends ModifiableNode(prefix){
     println()
   }
 
+  
+  override def clone() : Object = {
+    this.messageList = new MutableList[Int]()
+    super.clone()
+  }
 
   
 }

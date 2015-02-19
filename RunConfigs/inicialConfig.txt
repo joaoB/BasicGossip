@@ -27,6 +27,11 @@ protocol.avg1.linkable link
 protocol.avg1.step CYCLE
 protocol.avg1.transport tr
 
+protocol.avg2 example.basicGossip.FRProtocol
+protocol.avg2.linkable link
+protocol.avg2.step CYCLE
+protocol.avg2.transport tr
+
 protocol.avg example.basicGossip.BasicGossip
 protocol.avg.linkable link
 protocol.avg.step CYCLE
@@ -48,8 +53,10 @@ init.rndlink WireKOut
 init.rndlink.k 20
 init.rndlink.protocol link
 
+init.vals.FR_PERCENTAGE 0
+
 init.vals ProtocolInitializer
-init.vals.protocol avg avg1
+init.vals.protocol avg avg1 avg2
 
 init.sch CDScheduler
 init.sch.protocol avg avg1

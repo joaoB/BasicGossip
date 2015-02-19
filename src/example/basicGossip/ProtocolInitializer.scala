@@ -4,23 +4,38 @@ import peersim.core.Control
 import peersim.dynamics.NodeInitializer
 import peersim.core.Node
 import peersim.core.Network
+import peersim.config.Configuration
 
 class ProtocolInitializer(name: String) extends Control with NodeInitializer{
+  
+  val frPercentage = Configuration.getDouble(name + "." + "FR_PERCENTAGE");
 
   def execute = {
     for(id <- 1 until Network.size()) {
-      println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-     initialize(Network.get(id))
-      
+      id match{
+        case id if id < Network.size() * frPercentage => initializeFreeRider(Network.get(id))
+        case _ => initializeAltruistic(Network.get(id))
+      }      
     }
     false
   }
   
-  def initialize(node: Node) = {
+  def initializeAltruistic(node: Node) {
     node match {
-      case myNode : Usernode => myNode.setProtocol(0, new AltruisticProtocol("a"))
+      case myNode : Usernode => myNode.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
       case _ => ???
     }
+  }
+  
+    def initializeFreeRider(node: Node) {
+    node match {
+      case myNode : Usernode => myNode.setProtocol(1, new FRProtocol("Free Rider Protocol"))
+      case _ => ???
+    }
+  }
+  
+  
+  def initialize(node: Node) = {
   } 
   
 }

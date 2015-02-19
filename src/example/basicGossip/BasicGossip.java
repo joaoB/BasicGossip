@@ -1,8 +1,5 @@
 package example.basicGossip;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
 import peersim.config.FastConfig;
@@ -19,8 +16,8 @@ import peersim.vector.SingleValueHolder;
 public class BasicGossip extends SingleValueHolder implements CDProtocol,
 		EDProtocol {
 
-	protected int fanout;
-	protected int networkSize;
+	public static int fanout;
+	public static int networkSize;
 	protected int info;
 
 	// --------------------------------------------------------------------------
@@ -37,6 +34,11 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 		fanout = (int) Math.log(networkSize);
 	}
 
+	
+	public int a(){
+		return fanout;
+	}
+
 	// --------------------------------------------------------------------------
 	// methods
 	// --------------------------------------------------------------------------
@@ -47,12 +49,10 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 	 * {@link peersim.edsim.CDScheduler} component in the configuration.
 	 */
 	public void nextCycle(Node node, int pid) {
-		System.out.println("PID " + pid);
-
-
+		// System.out.println("PID " + pid);
 		// streamer
 		if (node.getIndex() == 0) {
-			//System.out.println("streamer generating " + info);
+			System.out.println("streamer generating " + info);
 			for (int i = 0; i < fanout; i++) {
 				Linkable linkable = (Linkable) node.getProtocol(FastConfig
 						.getLinkable(pid));
@@ -60,16 +60,19 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 					Node peern = linkable.getNeighbor(CommonState.r
 							.nextInt(linkable.degree()));
 
-					//System.out.println("streamer sending to " + peern.getIndex());
-					
+					// System.out.println("streamer sending to " +
+					// peern.getIndex());
+
 					// XXX quick and dirty handling of failures
 					// (message would be lost anyway, we save time)
 					if (!peern.isUp())
 						return;
 
+					System.out
+							.println("streamer will send to " + peern.getID());
+
 					((Transport) node.getProtocol(FastConfig.getTransport(pid)))
-							.send(node, peern, new AverageMessage(info, node),
-									pid);
+							.send(node, peern, new Info(info, node), pid);
 				}
 
 			}
@@ -84,36 +87,95 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 	/**
 	 * This is the standard method to define to process incoming messages.
 	 */
-	public void processEvent(Node node, int pid, Object event) {
-
-		AverageMessage aem = (AverageMessage) event;
-		//System.out.println("Node: " + node.getIndex() + " received message " + aem.value);
-
-		if (!((Usernode) node).containsElem(aem.value)) {
-			// first time we receive this message
-			((Usernode) node).saveMessage(aem.value);
-			for (int i = 0; i < fanout; i++) {
-				Linkable linkable = (Linkable) node.getProtocol(FastConfig
-						.getLinkable(pid));
-				if (linkable.degree() > 0) {
-					Node peern = linkable.getNeighbor(CommonState.r
-							.nextInt(linkable.degree()));
-	
-					// XXX quick and dirty handling of failures
-					// (message would be lost anyway, we save time)
-					if (!peern.isUp())
-						return;
-
-					((Transport) node.getProtocol(FastConfig.getTransport(pid)))
-							.send(node, peern, new AverageMessage(info, node),
-									pid);
-				}
-
-			}
-			//System.out.println("Node: " + node.getIndex() );
-			//((Usernode) node).dumpMessageList();
-			
-		} 
+	public void processEvent(Node node, int pid, Object event) { /*
+																 * 
+																 * Info aem =
+																 * (Info) event;
+																 * //System.out.
+																 * println
+																 * ("Node: " +
+																 * node
+																 * .getIndex() +
+																 * " received message "
+																 * +
+																 * aem.value());
+																 * 
+																 * 
+																 * if
+																 * (!((Usernode)
+																 * node
+																 * ).containsElem
+																 * (
+																 * aem.value()))
+																 * { // first
+																 * time we
+																 * receive this
+																 * message
+																 * ((Usernode)
+																 * node
+																 * ).saveMessage
+																 * (
+																 * aem.value());
+																 * for (int i =
+																 * 0; i <
+																 * fanout; i++)
+																 * { Linkable
+																 * linkable =
+																 * (Linkable)
+																 * node
+																 * .getProtocol
+																 * (FastConfig
+																 * .getLinkable
+																 * (pid)); if
+																 * (linkable
+																 * .degree() >
+																 * 0) { Node
+																 * peern =
+																 * linkable
+																 * .getNeighbor
+																 * (CommonState
+																 * .r
+																 * .nextInt(linkable
+																 * .degree()));
+																 * 
+																 * // XXX quick
+																 * and dirty
+																 * handling of
+																 * failures //
+																 * (message
+																 * would be lost
+																 * anyway, we
+																 * save time) if
+																 * (
+																 * !peern.isUp()
+																 * ) return;
+																 * 
+																 * ((Transport)
+																 * node
+																 * .getProtocol
+																 * (FastConfig
+																 * .getTransport
+																 * (pid)))
+																 * .send(node,
+																 * peern, new
+																 * Info(info,
+																 * node), pid);
+																 * }
+																 * 
+																 * }
+																 * //System.out
+																 * .println
+																 * ("Node: " +
+																 * node
+																 * .getIndex()
+																 * );
+																 * //((Usernode)
+																 * node
+																 * ).dumpMessageList
+																 * ();
+																 * 
+																 * }
+																 */
 
 		/*
 		 * if (aem.sender != null) ((Transport)
@@ -122,35 +184,5 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 		 * 
 		 * value = (value + aem.value) / 2;
 		 */
-	}
-
-	private ArrayList<Integer> getRandomIds(int size) {
-		ArrayList<Integer> list = new ArrayList<Integer>();
-		for (int i = 0; i < size; i++) {
-			// list.add(new Random().nextInt(network));
-		}
-		Collections.shuffle(list);
-		return list;
-	}
-}
-
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
-
-/**
- * The type of a message. It contains a value of type double and the sender node
- * of type {@link peersim.core.Node}.
- */
-class AverageMessage {
-
-	final int value;
-	/**
-	 * If not null, this has to be answered, otherwise this is the answer.
-	 */
-	final Node sender;
-
-	public AverageMessage(int value, Node sender) {
-		this.value = value;
-		this.sender = sender;
 	}
 }
