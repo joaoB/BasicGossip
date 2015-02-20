@@ -1,5 +1,7 @@
-package example.basicGossip;
+package example.basicGossip.protocols;
 
+import example.basicGossip.Info;
+import example.basicGossip.Usernode;
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
 import peersim.config.FastConfig;
@@ -18,6 +20,7 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 
 	public static int fanout;
 	public static int networkSize;
+	public static int cycles;
 	protected int info;
 
 	// --------------------------------------------------------------------------
@@ -31,12 +34,8 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 	public BasicGossip(String prefix) {
 		super(prefix);
 		networkSize = (Configuration.getInt("network.size", 1));
-		fanout = (int) Math.log(networkSize);
-	}
-
-	
-	public int a(){
-		return fanout;
+		cycles = (Configuration.getInt("CYCLES", 1));
+		fanout = (int) Math.log(networkSize) ;
 	}
 
 	// --------------------------------------------------------------------------
@@ -72,7 +71,7 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 							.println("streamer will send to " + peern.getID());
 
 					((Transport) node.getProtocol(FastConfig.getTransport(pid)))
-							.send(node, peern, new Info(info, node), pid);
+							.send(node, peern, new Info(info, (Usernode) node), pid);
 				}
 
 			}

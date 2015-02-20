@@ -22,17 +22,7 @@ simulation.logtime CYCLE
 
 protocol.link peersim.core.IdleProtocol
 
-protocol.avg1 example.basicGossip.AltruisticProtocol
-protocol.avg1.linkable link
-protocol.avg1.step CYCLE
-protocol.avg1.transport tr
-
-protocol.avg2 example.basicGossip.FRProtocol
-protocol.avg2.linkable link
-protocol.avg2.step CYCLE
-protocol.avg2.transport tr
-
-protocol.avg example.basicGossip.BasicGossip
+protocol.avg example.basicGossip.protocols.BasicGossip
 protocol.avg.linkable link
 protocol.avg.step CYCLE
 protocol.avg.transport tr
@@ -56,10 +46,10 @@ init.rndlink.protocol link
 init.vals.FR_PERCENTAGE 0
 
 init.vals ProtocolInitializer
-init.vals.protocol avg avg1 avg2
+init.vals.protocol avg
 
 init.sch CDScheduler
-init.sch.protocol avg avg1
+init.sch.protocol avg
 init.sch.randstart
 
 
