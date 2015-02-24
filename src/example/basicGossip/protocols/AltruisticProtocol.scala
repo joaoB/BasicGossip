@@ -11,7 +11,6 @@ import scala.util.Random
 class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
 
   override def sendMessage(node: Usernode, info: Info, pid: Int) {
-    //TODO: decrease score of the node to whom i will send info
     if (!saveInfo(node, info)) {
       val linkable = node.getProtocol(FastConfig.getLinkable(pid))
       for (i <- 0 until BasicGossip.fanout) {
@@ -20,10 +19,6 @@ class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
             if (link.degree() > 0) {
               val peern = link.getNeighbor(Random
                 .nextInt(link.degree));
-              print("Node: " + node.getID + " -> ")
-              for (a <- 0 until link.degree)
-                print(link.getNeighbor(a).getID + " ")
-              println()
               if (peern.isUp()) {
                 node.getProtocol(FastConfig.getTransport(pid)) match {
                   case trans: Transport =>

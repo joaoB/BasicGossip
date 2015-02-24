@@ -10,7 +10,7 @@ import example.basicGossip.protocols._
 class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
   val frPercentage = Configuration.getDouble(name + "." + "FR_PERCENTAGE");
-
+  
   def execute = {
     for (id <- 1 until Network.size()) {
       id match {
@@ -23,7 +23,8 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
   def initializeAltruistic(node: Node) {
     node match {
-      case myNode: Usernode => myNode.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+     // case myNode: Usernode => myNode.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+      case myNode: Usernode => myNode.setProtocol(0, new AltruisticWithMaxHops("example.basicGossip.protocols.AltruisticWithMaxHops"))
       case _ => ???
     }
   }

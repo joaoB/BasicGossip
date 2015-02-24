@@ -9,8 +9,8 @@ class Oracle {
   var maxHopInfo: Info = Info(0, new Usernode("test node"), 0)
 
   def saveMaxHopInfo(info: Info) {
-//    println("Current Info Hop: " + maxHopInfo.hop)
-//    println("Received: " + info.hop)
+  //  println("Current Info Hop: " + maxHopInfo.hop)
+   // println("Received: " + info.hop)
     if (info.hop > maxHopInfo.hop) {
       updateMaxHopInfo(info)
     }

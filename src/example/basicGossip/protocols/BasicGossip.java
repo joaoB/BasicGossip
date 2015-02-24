@@ -36,7 +36,7 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 		super(prefix);
 		networkSize = (Configuration.getInt("network.size", 1));
 		cycles = (Configuration.getInt("CYCLES", 1));
-		fanout = (int) Math.log(networkSize) ;
+		fanout = (int) Math.log(networkSize);
 	}
 
 	// --------------------------------------------------------------------------
@@ -55,11 +55,12 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 			System.out.println("streamer generating " + info);
 			Random r = new Random();
 			for (int i = 0; i < fanout; i++) {
-				
+
 				Linkable linkable = (Linkable) node.getProtocol(FastConfig
 						.getLinkable(pid));
 				if (linkable.degree() > 0) {
-					Node peern = linkable.getNeighbor(r.nextInt(linkable.degree()));
+					Node peern = linkable.getNeighbor(r.nextInt(linkable
+							.degree()));
 
 					// System.out.println("streamer sending to " +
 					// peern.getIndex());
@@ -73,7 +74,8 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 							.println("streamer will send to " + peern.getID());
 
 					((Transport) node.getProtocol(FastConfig.getTransport(pid)))
-							.send(node, peern, new Info(info, (Usernode) node, 0), pid);
+							.send(node, peern, new Info(info, (Usernode) node,
+									0), pid);
 				}
 
 			}
@@ -83,107 +85,6 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 
 	}
 
-	// --------------------------------------------------------------------------
-
-	/**
-	 * This is the standard method to define to process incoming messages.
-	 */
-	public void processEvent(Node node, int pid, Object event) { /*
-																 * 
-																 * Info aem =
-																 * (Info) event;
-																 * //System.out.
-																 * println
-																 * ("Node: " +
-																 * node
-																 * .getIndex() +
-																 * " received message "
-																 * +
-																 * aem.value());
-																 * 
-																 * 
-																 * if
-																 * (!((Usernode)
-																 * node
-																 * ).containsElem
-																 * (
-																 * aem.value()))
-																 * { // first
-																 * time we
-																 * receive this
-																 * message
-																 * ((Usernode)
-																 * node
-																 * ).saveMessage
-																 * (
-																 * aem.value());
-																 * for (int i =
-																 * 0; i <
-																 * fanout; i++)
-																 * { Linkable
-																 * linkable =
-																 * (Linkable)
-																 * node
-																 * .getProtocol
-																 * (FastConfig
-																 * .getLinkable
-																 * (pid)); if
-																 * (linkable
-																 * .degree() >
-																 * 0) { Node
-																 * peern =
-																 * linkable
-																 * .getNeighbor
-																 * (CommonState
-																 * .r
-																 * .nextInt(linkable
-																 * .degree()));
-																 * 
-																 * // XXX quick
-																 * and dirty
-																 * handling of
-																 * failures //
-																 * (message
-																 * would be lost
-																 * anyway, we
-																 * save time) if
-																 * (
-																 * !peern.isUp()
-																 * ) return;
-																 * 
-																 * ((Transport)
-																 * node
-																 * .getProtocol
-																 * (FastConfig
-																 * .getTransport
-																 * (pid)))
-																 * .send(node,
-																 * peern, new
-																 * Info(info,
-																 * node), pid);
-																 * }
-																 * 
-																 * }
-																 * //System.out
-																 * .println
-																 * ("Node: " +
-																 * node
-																 * .getIndex()
-																 * );
-																 * //((Usernode)
-																 * node
-																 * ).dumpMessageList
-																 * ();
-																 * 
-																 * }
-																 */
-
-		/*
-		 * if (aem.sender != null) ((Transport)
-		 * node.getProtocol(FastConfig.getTransport(pid))).send( node,
-		 * aem.sender, new AverageMessage(value, null), pid);
-		 * 
-		 * value = (value + aem.value) / 2;
-		 */
+	public void processEvent(Node node, int pid, Object event) {
 	}
 }
