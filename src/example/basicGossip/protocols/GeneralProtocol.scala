@@ -14,9 +14,8 @@ abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol 
     event match {
       case info: Info => node match {
         case usernode: Usernode if !usernode.containsElem(info.value) =>
-          usernode.increaseScore(info.sender)
           sendMessage(usernode, info, pid)
-        case node: Usernode =>
+        case usernode: Usernode => usernode.increaseScore(info.sender)
         case _ => ???
       }
       case _ => ???
@@ -25,9 +24,10 @@ abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol 
 
   def sendMessage(node: Usernode, info: Info, pid: Int)
 
-  def saveInfo(node: Usernode, value: Int): Boolean = {
-    if (!node.containsElem(value)) {
-      node.saveMessage(value)
+  def saveInfo(node: Usernode, info: Info): Boolean = {
+    node.increaseScore(info.sender)
+    if (!node.containsElem(info.value)) {
+      node.saveMessage(info.value)
       true
     }
     false

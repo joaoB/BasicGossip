@@ -1,9 +1,10 @@
 package example.basicGossip
 
-import example.basicGossip.protocols.BasicGossip;
+import example.basicGossip.protocols.BasicGossip
 import peersim.core.GeneralNode
 import scala.collection.mutable.MutableList
 import peersim.core.ModifiableNode
+import peersim.core.Node
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
@@ -14,21 +15,21 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     messageList.+=(elem)
   }
 
-  def increaseScore(node: Usernode) {
+  def increaseScore(node: Node) {
     // used when we receive info from node
     val id = node.getID
-    scoreList match {
+    scoreList = scoreList match {
       case map if map.contains(id) => scoreList.updated(id, scoreList(id) + 1)
-      case _ => scoreList += (id -> 1)
+      case _ => scoreList.updated(id, 1)
     }
   }
 
-  def decreaseScore(node: Usernode) {
+  def decreaseScore(node: Node) {
     // used when we send info to node
     val id = node.getID
-    scoreList match {
+    scoreList = scoreList match {
       case map if map.contains(id) => scoreList.updated(id, scoreList(id) - 1)
-      case _ => scoreList += (id -> -1)
+      case _ => scoreList.updated(id, -1)
     }
   }
 
@@ -42,9 +43,38 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     println()
   }
 
+  def dumpAltruistics = {
+    print("Altruistics of node: " + getID + " -> ")
+    //val altruistic =
+    scoreList.filter {
+      x => x._2 >= 0
+    }
+      .map {
+        elems => print(elems._1 + " ")
+      }
+    println()
+  }
+
   def dumpPercentageOfMessage = {
     print("Node: " + this.getID + "-> ")
     println(messageList.size.toFloat / (BasicGossip.cycles - 1))
+  }
+  
+  def dumpAmoutOfMessage = {
+    print("Node: " + this.getID + "-> ")
+    println(messageList.size + " / " + (BasicGossip.cycles - 1))
+  }
+  
+
+  def dumpFreeRiders = {
+    print("Free Riders of node: " + getID + " -> ")
+    val fr = scoreList.filter {
+      x => x._2 <= -3
+    }
+      .map {
+        elems => print(elems._1 + " ")
+      }
+    println()
   }
 
   override def clone(): Object = {
