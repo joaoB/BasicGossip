@@ -1,16 +1,17 @@
 package example.basicGossip.protocols;
 
-import example.basicGossip.Info;
-import example.basicGossip.Usernode;
+import java.util.Random;
+
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
 import peersim.config.FastConfig;
-import peersim.core.CommonState;
 import peersim.core.Linkable;
 import peersim.core.Node;
 import peersim.edsim.EDProtocol;
 import peersim.transport.Transport;
 import peersim.vector.SingleValueHolder;
+import example.basicGossip.Info;
+import example.basicGossip.Usernode;
 
 /**
  * Event driven version of epidemic averaging.
@@ -52,12 +53,13 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 		// streamer
 		if (node.getIndex() == 0) {
 			System.out.println("streamer generating " + info);
+			Random r = new Random();
 			for (int i = 0; i < fanout; i++) {
+				
 				Linkable linkable = (Linkable) node.getProtocol(FastConfig
 						.getLinkable(pid));
 				if (linkable.degree() > 0) {
-					Node peern = linkable.getNeighbor(CommonState.r
-							.nextInt(linkable.degree()));
+					Node peern = linkable.getNeighbor(r.nextInt(linkable.degree()));
 
 					// System.out.println("streamer sending to " +
 					// peern.getIndex());
@@ -71,7 +73,7 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 							.println("streamer will send to " + peern.getID());
 
 					((Transport) node.getProtocol(FastConfig.getTransport(pid)))
-							.send(node, peern, new Info(info, (Usernode) node), pid);
+							.send(node, peern, new Info(info, (Usernode) node, 0), pid);
 				}
 
 			}

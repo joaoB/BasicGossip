@@ -1,6 +1,7 @@
 package example.basicGossip
 
 import peersim.core._
+import example.basicGossip.oracle.Oracle
 
 class BasicGossipObserver(name: String) extends Control {
 
@@ -8,10 +9,13 @@ class BasicGossipObserver(name: String) extends Control {
     for (i <- 0 until Network.size()) {
       Network.get(i) match {
         //case node: Usernode => node.dumpPercentageOfMessage
-        case node: Usernode => node.dumpAmoutOfMessage
+        case node: Usernode => //node.dumpAmoutOfMessage
         case _ => ???
       }
 
+   //   print("Max Hop Info -> ")
+    //  println(Oracle.maxHopInfo.hop)
+      
     }
     /*println("NODE 42 scorelist")
     Network.get(42) match { case a: Usernode => a.scoreList map(x => println (x._1 + " -> " + x._2)) }

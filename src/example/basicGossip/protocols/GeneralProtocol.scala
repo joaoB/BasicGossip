@@ -5,6 +5,7 @@ import peersim.cdsim.CDProtocol
 import peersim.core.Node
 import example.basicGossip.Info
 import example.basicGossip.Usernode
+import example.basicGossip.oracle.Oracle
 
 abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol {
 
@@ -14,6 +15,7 @@ abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol 
     event match {
       case info: Info => node match {
         case usernode: Usernode if !usernode.containsElem(info.value) =>
+          Oracle.saveMaxHopInfo(info)
           sendMessage(usernode, info, pid)
         case usernode: Usernode => usernode.increaseScore(info.sender)
         case _ => ???

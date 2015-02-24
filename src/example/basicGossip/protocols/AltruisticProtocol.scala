@@ -2,11 +2,11 @@ package example.basicGossip.protocols
 
 import example.basicGossip.Info
 import example.basicGossip.Usernode
-
 import peersim.config.FastConfig
 import peersim.core.CommonState
 import peersim.core.Linkable
 import peersim.transport.Transport
+import scala.util.Random
 
 class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
 
@@ -18,12 +18,16 @@ class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
         linkable match {
           case link: Linkable =>
             if (link.degree() > 0) {
-              val peern = link.getNeighbor(CommonState.r
+              val peern = link.getNeighbor(Random
                 .nextInt(link.degree));
+              print("Node: " + node.getID + " -> ")
+              for (a <- 0 until link.degree)
+                print(link.getNeighbor(a).getID + " ")
+              println()
               if (peern.isUp()) {
                 node.getProtocol(FastConfig.getTransport(pid)) match {
                   case trans: Transport =>
-                    trans.send(node, peern, new Info(info.value, node), pid)
+                    trans.send(node, peern, Info(info.value, node, info.hop + 1), pid)
                     node.decreaseScore(peern)
                   case _ => ???
                 }

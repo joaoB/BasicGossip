@@ -2,7 +2,7 @@
 SIZE 100
 
 # parameters of periodic execution
-CYCLES 20
+CYCLES 2
 CYCLE SIZE*100
 
 # parameters of message transfer
@@ -39,11 +39,11 @@ network.node example.basicGossip.Usernode
 
 ################### initialization ======================
 
-init.rndlink WireKOut
+init.rndlink example.basicGossip.dynamics.MyWireKOut
 init.rndlink.k 20
 init.rndlink.protocol link
 
-init.vals.FR_PERCENTAGE 0.15
+init.vals.FR_PERCENTAGE 0
 
 init.vals ProtocolInitializer
 init.vals.protocol avg
