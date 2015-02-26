@@ -36,7 +36,7 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 		super(prefix);
 		networkSize = (Configuration.getInt("network.size", 1));
 		cycles = (Configuration.getInt("CYCLES", 1));
-		fanout = (int) Math.log(networkSize);
+		fanout = (int) Math.log(networkSize) + 1;
 	}
 
 	// --------------------------------------------------------------------------
@@ -69,10 +69,6 @@ public class BasicGossip extends SingleValueHolder implements CDProtocol,
 					// (message would be lost anyway, we save time)
 					if (!peern.isUp())
 						return;
-
-					System.out
-							.println("streamer will send to " + peern.getID());
-
 					((Transport) node.getProtocol(FastConfig.getTransport(pid)))
 							.send(node, peern, new Info(info, (Usernode) node,
 									0), pid);

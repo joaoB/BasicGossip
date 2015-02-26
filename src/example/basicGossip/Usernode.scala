@@ -57,12 +57,12 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def dumpPercentageOfMessage = {
     print("Node: " + this.getID + "-> ")
-    println(messageList.size.toFloat / (BasicGossip.cycles - 1))
+    println(messageList.size.toFloat / BasicGossip.cycles)
   }
   
   def dumpAmoutOfMessage = {
     print("Node: " + this.getID + "-> ")
-    println(messageList.size + " / " + (BasicGossip.cycles - 1))
+    println(messageList.size + " / " + BasicGossip.cycles)
   }
   
 

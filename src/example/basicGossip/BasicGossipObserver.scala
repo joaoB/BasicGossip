@@ -10,22 +10,17 @@ class BasicGossipObserver(name: String) extends Control {
     for (i <- 0 until Network.size) {
       Network.get(i) match {
         case node: Usernode => //node.dumpPercentageOfMessage
-        //case node: Usernode => node.dumpAmoutOfMessage
+       //case node: Usernode => node.dumpAmoutOfMessage
         case _ => ???
       }
-
-      val percentages = (for (i <- 1 until Network.size) yield Network.get(i)) map {
-        elem =>
-          elem match {
-            case un: Usernode => un.messageList.size.toFloat / (BasicGossip.cycles - 1)
-          }
-      }
-      println("Min percentage: " + percentages.min)
-      println("Max percentage: " + percentages.max)
-
+    }
+      dumpMinAndMaxPercentages
+      dumpMaxHops
+      dumpTotalMessages
+      println("fanout " + BasicGossip.fanout)
       //      print("Max Hop Info -> ")
       //      println(Oracle.maxHopInfo.hop)     
-    }
+
     /*println("NODE 42 scorelist")
     Network.get(42) match { case a: Usernode => a.scoreList map(x => println (x._1 + " -> " + x._2)) }
 */
@@ -42,4 +37,27 @@ class BasicGossipObserver(name: String) extends Control {
     false
   }
 
+  private def dumpMinAndMaxPercentages = {
+    val percentages = (for (i <- 1 until Network.size) yield Network.get(i)) map {
+      elem =>
+        elem match {
+          case un: Usernode => un.messageList.size.toFloat / BasicGossip.cycles
+        }
+    }
+    println("Min percentage: " + percentages.min)
+    println("Max percentage: " + percentages.max)
+    println("Amount of nodes with 100% -> " + percentages.count { x => x == 1.0 })
+  }
+
+  private def dumpMaxHops = {
+    Oracle.maxHopInfo match {
+      case Some(elem) => println("Max hops -> " + elem.hop)
+      case None => //should never happen
+    }
+  }
+  
+  private def dumpTotalMessages = {
+    println("Amounf of messages: " + Oracle.amountOfSentMessages)
+  }
+  
 }

@@ -1,11 +1,11 @@
 package example.basicGossip.protocols
 
-import peersim.edsim.EDProtocol
-import peersim.cdsim.CDProtocol
-import peersim.core.Node
 import example.basicGossip.Info
 import example.basicGossip.Usernode
 import example.basicGossip.oracle.Oracle
+import peersim.cdsim.CDProtocol
+import peersim.core.Node
+import peersim.edsim.EDProtocol
 
 abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol {
 

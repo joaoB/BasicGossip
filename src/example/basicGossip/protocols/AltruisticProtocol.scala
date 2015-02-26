@@ -7,6 +7,7 @@ import peersim.core.CommonState
 import peersim.core.Linkable
 import peersim.transport.Transport
 import scala.util.Random
+import example.basicGossip.oracle.Oracle
 
 class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
 
@@ -22,6 +23,7 @@ class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
               if (peern.isUp()) {
                 node.getProtocol(FastConfig.getTransport(pid)) match {
                   case trans: Transport =>
+                    Oracle.incSentMessages
                     trans.send(node, peern, Info(info.value, node, info.hop + 1), pid)
                     node.decreaseScore(peern)
                   case _ => ???

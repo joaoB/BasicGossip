@@ -7,6 +7,7 @@ import peersim.core.Linkable
 import peersim.config.FastConfig
 import scala.util.Random
 import peersim.config.Configuration
+import example.basicGossip.oracle.Oracle
 
 class AltruisticWithMaxHops(name: String) extends AltruisticProtocol(name) {
 
@@ -24,6 +25,7 @@ class AltruisticWithMaxHops(name: String) extends AltruisticProtocol(name) {
             if (peern.isUp()) {
               node.getProtocol(FastConfig.getTransport(pid)) match {
                 case trans: Transport if info.hop < maxHops =>
+                  Oracle.incSentMessages
                   trans.send(node, peern, Info(info.value, node, info.hop + 1), pid)
                   node.decreaseScore(peern)
                 case _ => // do nothing
