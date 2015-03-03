@@ -44,6 +44,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   def initialize(node: Node) = {}
 
   def initializeViews = {
+    //hyparview initialization
 
     for (i <- 0 until Network.size) {
       Network.get(i).getProtocol(HyParViewJoinTest.protocolID) match {
@@ -51,37 +52,32 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
         case _ => println("Check initializeViews@protocol initializer")
       }
     }
+    //hyparview initialization
     for (i <- 0 until Network.size) {
+            println("Bnode " + i)
+
       Network.get(0).getProtocol(HyParViewJoinTest.protocolID) match {
         case prot: HyParViewJoinTest => prot.join(Network.get(i), HyParViewJoinTest.protocolID)
         case _ => println("Check initializeViews@protocol initializer")
       }
     }
 
+    //put result from hyparview into link protocol
     for (i <- 0 until Network.size) {
-      Network.get(i).getProtocol(FastConfig.getLinkable(0)) match {
-        case prot: Link => prot.cleanAll
-        case _ => println("Check initializeViews@protocol initializer")
-      }
-    }
-
-    for (i <- 0 until Network.size) {
-      Network.get(i).getProtocol(FastConfig.getLinkable(0)) match {
-        case prot: Link => prot.cleanAll
-        case _ => println("Check initializeViews@protocol initializer")
-      }
-    }
-
-    for (i <- 0 until Network.size) {
-      val node = Network.get(i)
-      node.getProtocol(HyParViewJoinTest.protocolID) match {
-        case prot: HyParViewJoinTest => prot.neighbors map {
-          neigh =>
-            node.getProtocol(FastConfig.getLinkable(0)) match {
-              case protLink: Link => protLink.addNeighbor(neigh)
-              case _ => println("Check initializeViews@protocol initializer")
-            }
-        }
+      println("Cnode " + i)
+      val node = Network.get(i) match {
+        case un: Usernode =>
+          un.getProtocol(HyParViewJoinTest.protocolID) match {
+            case prot: HyParViewJoinTest =>
+              un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))         
+              prot.neighbors map {
+                neigh =>
+                  un.getProtocol(FastConfig.getLinkable(0)) match {
+                    case protLink: Link => protLink.addNeighbor(neigh)
+                    case _ => println("Check initializeViews@protocol initializer")
+                  }
+              }
+          }
       }
     }
 

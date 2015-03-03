@@ -34,4 +34,5 @@ abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol 
     }
     false
   }
+  
 }

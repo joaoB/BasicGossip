@@ -1,5 +1,5 @@
 # network size
-SIZE 1000
+SIZE 1500
 
 # parameters of periodic execution
 CYCLES 150

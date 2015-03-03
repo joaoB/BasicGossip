@@ -4,6 +4,8 @@ import peersim.core._
 import example.basicGossip.oracle.Oracle
 import example.basicGossip.protocols.BasicGossip
 import hyparview.HyParViewJoinTest
+import peersim.config.FastConfig
+import example.basicGossip.protocols.Link
 
 class BasicGossipObserver(name: String) extends Control {
 
@@ -20,7 +22,7 @@ class BasicGossipObserver(name: String) extends Control {
     dumpTotalMessages
     dumpAvgReliability
     println("fanout " + BasicGossip.fanout)
-
+    dumpFreeRiders
 
     //      print("Max Hop Info -> ")
     //      println(Oracle.maxHopInfo.hop)     
@@ -72,7 +74,16 @@ class BasicGossipObserver(name: String) extends Control {
         }
     }
     println("Reliability: " + percentages.sum / percentages.size)
+  }
 
+  private def dumpFreeRiders = {
+    for (i <- 1 until Network.size) {
+      Network.get(i) match {
+        case us: Usernode =>
+          println("FREE RIDERS OF NODE " + i + " -> ")
+          println(us.scoreList.filter(_._2 < -10))
+      }
+    }
   }
 
 }
