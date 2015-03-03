@@ -6,6 +6,10 @@ import peersim.core.Node
 import peersim.core.Network
 import peersim.config.Configuration
 import example.basicGossip.protocols._
+import hyparview.HyParViewJoinTest
+import peersim.core.Linkable
+import peersim.core.IdleProtocol
+import peersim.config.FastConfig
 
 class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
@@ -18,6 +22,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
         case _ => initializeAltruistic(Network.get(id))
       }
     }
+    initializeViews
     false
   }
 
@@ -36,7 +41,50 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     }
   }
 
-  def initialize(node: Node) = {
+  def initialize(node: Node) = {}
+
+  def initializeViews = {
+
+    for (i <- 0 until Network.size) {
+      Network.get(i).getProtocol(HyParViewJoinTest.protocolID) match {
+        case prot: HyParViewJoinTest => prot.setMyNode(Network.get(i))
+        case _ => println("Check initializeViews@protocol initializer")
+      }
+    }
+    for (i <- 0 until Network.size) {
+      Network.get(0).getProtocol(HyParViewJoinTest.protocolID) match {
+        case prot: HyParViewJoinTest => prot.join(Network.get(i), HyParViewJoinTest.protocolID)
+        case _ => println("Check initializeViews@protocol initializer")
+      }
+    }
+
+    for (i <- 0 until Network.size) {
+      Network.get(i).getProtocol(FastConfig.getLinkable(0)) match {
+        case prot: Link => prot.cleanAll
+        case _ => println("Check initializeViews@protocol initializer")
+      }
+    }
+
+    for (i <- 0 until Network.size) {
+      Network.get(i).getProtocol(FastConfig.getLinkable(0)) match {
+        case prot: Link => prot.cleanAll
+        case _ => println("Check initializeViews@protocol initializer")
+      }
+    }
+
+    for (i <- 0 until Network.size) {
+      val node = Network.get(i)
+      node.getProtocol(HyParViewJoinTest.protocolID) match {
+        case prot: HyParViewJoinTest => prot.neighbors map {
+          neigh =>
+            node.getProtocol(FastConfig.getLinkable(0)) match {
+              case protLink: Link => protLink.addNeighbor(neigh)
+              case _ => println("Check initializeViews@protocol initializer")
+            }
+        }
+      }
+    }
+
   }
 
 }

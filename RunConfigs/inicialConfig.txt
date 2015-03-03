@@ -1,5 +1,5 @@
 # network size
-SIZE 5000
+SIZE 1000
 
 # parameters of periodic execution
 CYCLES 150
@@ -20,12 +20,17 @@ simulation.logtime CYCLE
 
 ################### protocols ===========================
 
-protocol.link peersim.core.IdleProtocol
+#protocol.link peersim.core.IdleProtocol
+protocol.link example.basicGossip.protocols.Link
 
 protocol.avg example.basicGossip.protocols.BasicGossip
 protocol.avg.linkable link
 protocol.avg.step CYCLE
 protocol.avg.transport tr
+
+protocol.view hyparview.HyParViewJoinTest
+protocol.view.step CYCLE
+
 
 protocol.urt UniformRandomTransport
 protocol.urt.mindelay (CYCLE*MINDELAY)/100
@@ -39,14 +44,13 @@ network.node example.basicGossip.Usernode
 
 ################### initialization ======================
 
-example.basicGossip.protocols.AltruisticWithMaxHops.MAX_HOPS = 20
+example.basicGossip.protocols.AltruisticWithMaxHops.MAX_HOPS = 15
 
 init.rndlink example.basicGossip.dynamics.MyWireKOut
 init.rndlink.k 5000
 init.rndlink.protocol link
 
 init.vals.FR_PERCENTAGE 0
-
 init.vals ProtocolInitializer
 init.vals.protocol avg
 

@@ -3,23 +3,27 @@ package example.basicGossip
 import peersim.core._
 import example.basicGossip.oracle.Oracle
 import example.basicGossip.protocols.BasicGossip
+import hyparview.HyParViewJoinTest
 
 class BasicGossipObserver(name: String) extends Control {
 
   def execute = {
     for (i <- 0 until Network.size) {
       Network.get(i) match {
-        case node: Usernode => //node.dumpPercentageOfMessage
-       //case node: Usernode => node.dumpAmoutOfMessage
+        case node: Usernode => //println(node)// println(node.messageList)
+        //case node: Usernode => node.dumpAmoutOfMessage
         case _ => ???
       }
     }
-      dumpMinAndMaxPercentages
-      dumpMaxHops
-      dumpTotalMessages
-      println("fanout " + BasicGossip.fanout)
-      //      print("Max Hop Info -> ")
-      //      println(Oracle.maxHopInfo.hop)     
+    dumpMinAndMaxPercentages
+    dumpMaxHops
+    dumpTotalMessages
+    dumpAvgReliability
+    println("fanout " + BasicGossip.fanout)
+
+
+    //      print("Max Hop Info -> ")
+    //      println(Oracle.maxHopInfo.hop)     
 
     /*println("NODE 42 scorelist")
     Network.get(42) match { case a: Usernode => a.scoreList map(x => println (x._1 + " -> " + x._2)) }
@@ -55,9 +59,20 @@ class BasicGossipObserver(name: String) extends Control {
       case None => //should never happen
     }
   }
-  
+
   private def dumpTotalMessages = {
     println("Amounf of messages: " + Oracle.amountOfSentMessages)
   }
-  
+
+  private def dumpAvgReliability = {
+    val percentages = (for (i <- 1 until Network.size) yield Network.get(i)) map {
+      elem =>
+        elem match {
+          case un: Usernode => un.messageList.size.toFloat / BasicGossip.cycles
+        }
+    }
+    println("Reliability: " + percentages.sum / percentages.size)
+
+  }
+
 }

@@ -12,7 +12,7 @@ class MyWireKOut(name: String) extends WireGraph(name) {
   val k = Configuration.getInt(name + ".k");
   
   def wire(g: Graph) {
-    GraphFactory.wireKOut(g, k, new Random);
+    //GraphFactory.wireKOut(g, k, new Random);
   }
 
 }
