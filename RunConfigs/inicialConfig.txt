@@ -1,8 +1,8 @@
 # network size
-SIZE 1500
+SIZE 1000
 
 # parameters of periodic execution
-CYCLES 150
+CYCLES 200
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -44,13 +44,13 @@ network.node example.basicGossip.Usernode
 
 ################### initialization ======================
 
-example.basicGossip.protocols.AltruisticWithMaxHops.MAX_HOPS = 15
+example.basicGossip.protocols.AltruisticWithMaxHops.MAX_HOPS = 40
 
 init.rndlink example.basicGossip.dynamics.MyWireKOut
 init.rndlink.k 5000
 init.rndlink.protocol link
 
-init.vals.FR_PERCENTAGE 0
+init.vals.FR_PERCENTAGE 0.1
 init.vals ProtocolInitializer
 init.vals.protocol avg
 

@@ -46,6 +46,8 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   def initializeViews = {
     //hyparview initialization
 
+    
+    
     for (i <- 0 until Network.size) {
       Network.get(i).getProtocol(HyParViewJoinTest.protocolID) match {
         case prot: HyParViewJoinTest => prot.setMyNode(Network.get(i))
@@ -53,23 +55,20 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
       }
     }
     //hyparview initialization
-    for (i <- 0 until Network.size) {
-            println("Bnode " + i)
-
-      Network.get(0).getProtocol(HyParViewJoinTest.protocolID) match {
-        case prot: HyParViewJoinTest => prot.join(Network.get(i), HyParViewJoinTest.protocolID)
-        case _ => println("Check initializeViews@protocol initializer")
-      }
+    Network.get(0).getProtocol(HyParViewJoinTest.protocolID) match {
+      case prot: HyParViewJoinTest => for (i <- 0 until Network.size) { prot.join(Network.get(i), HyParViewJoinTest.protocolID) }
+      case _ => println("Check initializeViews@protocol initializer")
     }
+
+    //  }
 
     //put result from hyparview into link protocol
     for (i <- 0 until Network.size) {
-      println("Cnode " + i)
       val node = Network.get(i) match {
         case un: Usernode =>
           un.getProtocol(HyParViewJoinTest.protocolID) match {
             case prot: HyParViewJoinTest =>
-              un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))         
+              un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
               prot.neighbors map {
                 neigh =>
                   un.getProtocol(FastConfig.getLinkable(0)) match {
@@ -84,3 +83,5 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   }
 
 }
+
+//object ProtocolInitializer extends ProtocolInitializer("object")

@@ -1,11 +1,9 @@
 package example.basicGossip
 
-import peersim.core._
 import example.basicGossip.oracle.Oracle
 import example.basicGossip.protocols.BasicGossip
-import hyparview.HyParViewJoinTest
-import peersim.config.FastConfig
-import example.basicGossip.protocols.Link
+import peersim.core.Control
+import peersim.core.Network
 
 class BasicGossipObserver(name: String) extends Control {
 
@@ -22,7 +20,8 @@ class BasicGossipObserver(name: String) extends Control {
     dumpTotalMessages
     dumpAvgReliability
     println("fanout " + BasicGossip.fanout)
-    dumpFreeRiders
+    //checkSimmetryScores
+    //dumpFreeRiders
 
     //      print("Max Hop Info -> ")
     //      println(Oracle.maxHopInfo.hop)     
@@ -80,8 +79,55 @@ class BasicGossipObserver(name: String) extends Control {
     for (i <- 1 until Network.size) {
       Network.get(i) match {
         case us: Usernode =>
-          println("FREE RIDERS OF NODE " + i + " -> ")
-          println(us.scoreList.filter(_._2 < -10))
+          us.dumpFreeRiders
+      }
+    }
+  }
+
+  private def test2 = {
+    //the node with less % is also the node with less connections?
+    // YES!!!
+    for (i <- 1 until Network.size) {
+      print("Node: " + i + " ->")
+      Network.get(i) match {
+        case un: Usernode => println(un.scoreList.size + " " + un.messageList.size.toFloat / BasicGossip.cycles)
+      }
+    }
+  }
+
+  private def test = {
+    Network.get(0) match {
+      case streamer: Usernode => println(streamer)
+    }
+
+    for (i <- 1 until Network.size) {
+      print("Node: " + i + " ->")
+      Network.get(i) match {
+        case un: Usernode => println(un.scoreList.filter(_._2 > 0))
+      }
+    }
+  }
+
+  private def test3 = {
+    //does any node has a connection to itself????
+    //guess no...
+    for (i <- 0 until Network.size) {
+      print("Node: " + i + " ->")
+      Network.get(i) match {
+        case un: Usernode => un.scoreList.find(_._1 == un.getID) match {
+          case Some(elem) => println("BINGO!!!! PIMBA NE BELHA")
+          case None => println
+        }
+      }
+    }
+  }
+
+  private def checkSimmetryScores = {
+    for (i <- 0 until Network.size) {
+      print("Node: " + i + " ->")
+      Network.get(i) match {
+        case un: Usernode => println(un.scoreList)
+        
       }
     }
   }

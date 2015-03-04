@@ -21,7 +21,7 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   var info: Int = 0
 
   override def nextCycle(node: Node, pid: Int): Unit = {
-    println("generating new info " + info)
+    //println("generating new info " + info)
     node.getIndex match {
       case 0 => Network.get(0) match {
         case streamer: Usernode => sendInfo(streamer, fanout, pid, newInfo)
@@ -65,6 +65,7 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   def processEvent(node: Node, pid: Int, event: Object) {
     //for now, no 1 should send messages to streamer
+  //  println("STREAMER GOT A MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
   }
 
 }

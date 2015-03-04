@@ -40,7 +40,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	private static String name;
 	public static int protocolID;
 
-	private static int activeViewSize = 100;
+	private static int activeViewSize = 20;
 	private static int passiveViewSize = 30;
 	private static int randomLenght = 6;
 	private static int passiveRandomLenght = 3;

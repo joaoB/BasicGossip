@@ -2,12 +2,13 @@ package example.basicGossip
 
 import scala.collection.mutable.MutableList
 import scala.util.Random
-
 import example.basicGossip.protocols.BasicGossip
 import peersim.config.FastConfig
 import peersim.core.Linkable
 import peersim.core.ModifiableNode
 import peersim.core.Node
+import hyparview.HyParViewJoinTest
+import example.basicGossip.ProtocolInitializer
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
@@ -33,7 +34,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     // used when we send info to node
     val id = node.getID
     scoreList = scoreList match {
-      case map if map.contains(id) => 
+      case map if map.contains(id) =>
         scoreList.updated(id, scoreList(id) - 1)
       case _ =>
         scoreList.updated(id, -1)
@@ -48,13 +49,14 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def randomGossip(fanout: Int, sender: Node): List[Long] = {
 
-    val calculated = scoreList.filter {
-      x => x._1 != 0 || x._1 != sender.getID
-    }
+    val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID })
     //.toSeq.sortBy(x => -x._2)
-    //.take(fanout)
-    Random.shuffle(calculated).take(fanout).map(x => x._1).toList
-
+    val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
+    goodNodes ++
+      calculated.take(fanout - goodNodes.size).toList.map(_._1)
+    // .map(_._1)
+    // .toList
+    //calculated
   }
 
   def containsElem(elem: Int): Boolean = {
@@ -90,14 +92,25 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   }
 
   def dumpFreeRiders = {
+    val neigh = this.getProtocol(HyParViewJoinTest.protocolID) match {
+      case prot: HyParViewJoinTest => Some(prot.neighbors)
+      case _ => None
+    }
     print("Free Riders of node: " + getID + " -> ")
     val fr = scoreList.filter {
-      x => x._2 <= -3
+      x => x._2 <= -10
     }
-      .map {
-        elems => print(elems._1 + " ")
-      }
+    fr.map {
+      elems => print(elems._1 + " ")
+    }    
     println()
+    
+    val FRneib = neigh match {
+      case Some(elem) => elem.count { x => x.getID < 100 }
+      case None => 0
+    }
+    println("Found " + fr.size + "/" + FRneib)
+  //  println("Found " + neigh)
   }
 
   override def clone(): Object = {
