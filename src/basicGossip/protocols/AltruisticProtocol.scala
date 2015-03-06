@@ -10,7 +10,7 @@ import scala.util.Random
 import basicGossip.oracle.Oracle
 import peersim.core.Node
 
-class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
+class AltruisticProtocol(name: String) extends GeneralProtocol {
 
 //  override def sendMessage(node: Usernode, info: Info, pid: Int) {
 //    if (!saveInfo(node, info)) {
@@ -33,10 +33,9 @@ class AltruisticProtocol(name: String) extends GeneralProtocol(name) {
 //    }
 //  }
 
-  override def sendMessage(node: Usernode, info: Info, pid: Int) {
+  override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (!saveInfo(node, info)) {
       val linkable = node.getProtocol(FastConfig.getLinkable(pid))
-
       node.randomGossip(BasicGossip.fanout, info.sender) map {
         id =>
           linkable match {

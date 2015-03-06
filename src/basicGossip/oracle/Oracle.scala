@@ -9,14 +9,13 @@ import peersim.config.Configuration
 class Oracle {
 
   val frPercentage = Configuration.getDouble("Oracle." + "FR_PERCENTAGE")
+  val maxHops = Configuration.getInt("Oracle." + "MAX_HOPS")
 
   var maxHopInfo: Option[Info] = None
   var amountOfSentMessages: Int = 0
   var avgHops = MutableList[Int]()
 
   def saveMaxHopInfo(info: Info) {
-    //  println("Current Info Hop: " + maxHopInfo.hop)
-    // println("Received: " + info.hop)
     maxHopInfo match {
       case Some(elem) if info.hop > elem.hop => updateMaxHopInfo(info)
       case None => updateMaxHopInfo(info)

@@ -8,9 +8,7 @@ import peersim.config.FastConfig
 
 class AltruisticThirdModel(name: String) extends AltruisticProtocol(name) {
 
-  val maxHops = Configuration.getInt(name + "." + "MAX_HOPS")
-
-  override def sendMessage(node: Usernode, info: Info, pid: Int) {
+  override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (!saveInfo(node, info)) {
       val linkable = node.getProtocol(FastConfig.getLinkable(pid))
       node.randomGossip(BasicGossip.fanout, info.sender) map {

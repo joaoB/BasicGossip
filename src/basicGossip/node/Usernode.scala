@@ -2,19 +2,19 @@ package basicGossip.node
 
 import scala.collection.mutable.MutableList
 import scala.util.Random
-
 import basicGossip.protocols.BasicGossip
 import hyparview.HyParViewJoinTest
 import peersim.core.ModifiableNode
 import peersim.core.Node
+import basicGossip.messages.Info
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
-  var messageList = MutableList[Int]()
+  var messageList = MutableList[Info]()
   var scoreList = Map[Long, Int]()
 
-  def saveMessage(elem: Int) = {
-    messageList.+=(elem)
+  def saveMessage(info: Info) = {
+    messageList.+=(info)
   }
 
   def increaseScore(node: Node) {
@@ -57,13 +57,13 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     //calculated
   }
 
-  def containsElem(elem: Int): Boolean = {
-    messageList.contains(elem)
+  def containsElem(value: Int): Boolean = {
+    messageList.exists(_.value == value)
   }
 
   def dumpMessageList = {
     print("Node: " + this.getID + "->")
-    messageList.map(x => print(x + " "))
+    messageList.map(x => print(x.value + " "))
     println()
   }
 
@@ -100,20 +100,20 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     }
     fr.map {
       elems => print(elems._1 + " ")
-    }    
+    }
     println()
-    
+
     val FRneib = neigh match {
       case Some(elem) => elem.count { x => x.getID < 100 }
       case None => 0
     }
     println("Found " + fr.size + "/" + FRneib)
-  //  println("Found " + neigh)
+    //  println("Found " + neigh)
   }
 
   override def clone(): Object = {
     this.scoreList = Map[Long, Int]()
-    this.messageList = new MutableList[Int]()
+    this.messageList = new MutableList[Info]()
     super.clone()
   }
 

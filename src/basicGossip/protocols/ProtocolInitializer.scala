@@ -35,6 +35,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
           case 1 => myNode.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
           case 2 => myNode.setProtocol(0, new AltruisticWithMaxHops("basicGossip.protocols.AltruisticWithMaxHops"))
           case 3 => myNode.setProtocol(0, new AltruisticThirdModel("basicGossip.protocols.AltruisticThirdModel"))
+          case 4 => myNode.setProtocol(0, new ThreeFaseGossip("basicGossip.protocols.ThreeFaseGossip"))
           case _ => ???
         }
       case _ => ???

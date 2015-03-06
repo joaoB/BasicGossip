@@ -5,9 +5,9 @@ import basicGossip.node.Usernode
 
 
 
-class FRProtocol(name: String) extends GeneralProtocol(name) {
+class FRProtocol(name: String) extends ThreeFaseGossip(name) with GeneralProtocol  {
 
-  override def sendMessage(node: Usernode, info: Info, pid: Int) {
+  override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     saveInfo(node, info)
   }
 
