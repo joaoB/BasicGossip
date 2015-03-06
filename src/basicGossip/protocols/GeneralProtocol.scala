@@ -37,7 +37,7 @@ abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol 
     }
     false
   }
-  
+
   def sendToRandom(node: Usernode, info: Info, pid: Int) = {
     node.getProtocol(FastConfig.getLinkable(pid)) match {
       case link: Link =>
@@ -52,8 +52,10 @@ abstract class GeneralProtocol(name: String) extends CDProtocol with EDProtocol 
   }
 
   def sendInfo(trans: Transport, node: Usernode, peern: Node, info: Info, pid: Int) {
+    val newInfo = Info(info.value, node, info.hop + 1)
     Oracle.incSentMessages
-    trans.send(node, peern, Info(info.value, node, info.hop + 1), pid)
+    trans.send(node, peern, newInfo, pid)
     node.decreaseScore(peern)
+    Oracle.saveHop(newInfo)
   }
 }

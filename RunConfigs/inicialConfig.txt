@@ -1,5 +1,5 @@
 # network size
-SIZE 1000
+SIZE 500
 
 # parameters of periodic execution
 CYCLES 200
@@ -44,25 +44,46 @@ network.node basicGossip.node.Usernode
 
 ################### initialization ======================
 
-basicGossip.protocols.AltruisticWithMaxHops.MAX_HOPS = 40
+Oracle.FR_PERCENTAGE 0
+
+#put this on oracle
+basicGossip.protocols.AltruisticWithMaxHops.MAX_HOPS = 30
+basicGossip.protocols.AltruisticThirdModel.MAX_HOPS = 40
 
 init.rndlink basicGossip.dynamics.MyWireKOut
 init.rndlink.k 5000
 init.rndlink.protocol link
 
-init.vals.FR_PERCENTAGE 0.1
 init.vals ProtocolInitializer
-init.vals.protocol avg
+#init.vals.protocol avg
+
+#PROTOCOL ID
+#1 - Altruistic
+#2 - Max Hops
+#3 - Model 3
+init.vals.PROTOCOL_ID 2
 
 init.sch CDScheduler
 init.sch.protocol avg
-init.sch.randstart
+#init.sch.randstart
 
 
 
 ################ control ==============================
 
-control.0 BasicGossipObserver
+control.0 basicGossip.observers.MaxHopsObserver
 #control.0.step CYCLE
 control.0.step 99999999999999999
 control.0.FINAL 1	
+
+control.1 basicGossip.observers.TotalMessagesObserver
+control.1.step 99999999999999999
+control.1.FINAL 1
+
+control.2 basicGossip.observers.PercentagesObserver
+control.2.step 99999999999999999
+control.2.FINAL 1
+
+control.3 basicGossip.observers.AvgReliability
+control.3.step 99999999999999999
+control.3.FINAL 1
