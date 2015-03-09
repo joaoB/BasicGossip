@@ -61,22 +61,55 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     }
     //hyparview initialization
     Network.get(0).getProtocol(HyParViewJoinTest.protocolID) match {
-      case prot: HyParViewJoinTest => for (i <- 0 until Network.size) { prot.join(Network.get(i), HyParViewJoinTest.protocolID) }
+      case prot: HyParViewJoinTest => for (i <- 1 until Network.size) { prot.join(Network.get(i), HyParViewJoinTest.protocolID) }
       case _ => println("Check initializeViews@protocol initializer")
     }
 
-    //  }
+    globalHyParViewLinkage
+    // traditionalHyParViewLinkage
+  }
 
+  private def globalHyParViewLinkage = {
+    //streamer knows everybody
+    Network.get(0) match {
+      case streamer: Usernode =>
+        getLinkable(streamer) match {
+          case streamerLink: Link =>
+            for (i <- 1 until Network.size) {
+              val node = Network.get(i) match {
+                case un: Usernode =>
+                  un.getProtocol(HyParViewJoinTest.protocolID) match {
+                    case prot: HyParViewJoinTest =>
+                      un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
+                      prot.neighbors map {
+                        neigh =>
+                          getLinkable(un) match {
+                            case protLink: Link =>
+                              protLink.addNeighbor(Network.get(0))
+                              protLink.addNeighbor(neigh)
+                              streamerLink.addNeighbor(un)
+                            case _ => println("Check initializeViews@protocol initializer")
+                          }
+                      }
+                  }
+              }
+            }
+        }
+    }
+
+  }
+
+  private def traditionalHyParViewLinkage = {
     //put result from hyparview into link protocol
     for (i <- 0 until Network.size) {
-      val node = Network.get(i) match {
+      Network.get(i) match {
         case un: Usernode =>
           un.getProtocol(HyParViewJoinTest.protocolID) match {
             case prot: HyParViewJoinTest =>
               un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
               prot.neighbors map {
                 neigh =>
-                  un.getProtocol(FastConfig.getLinkable(0)) match {
+                  getLinkable(un) match {
                     case protLink: Link => protLink.addNeighbor(neigh)
                     case _ => println("Check initializeViews@protocol initializer")
                   }
@@ -84,7 +117,8 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
           }
       }
     }
-
   }
 
+  private def getLinkable(usernode: Usernode) = usernode.getProtocol(FastConfig.getLinkable(0))
+  
 }

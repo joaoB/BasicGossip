@@ -5,12 +5,23 @@ import peersim.core.Network
 import basicGossip.protocols.BasicGossip
 
 class PercentagesObserver(name: String) extends BasicGossipObserver(name) {
-  
-    override def run: Boolean = {
+
+  override def run: Boolean = {
     dumpMinAndMaxPercentages
+    //dumpFreeRiders
     false
   }
-  
+
+  def dumpFreeRiders = {
+    println(Network.get(0))
+   (for (i <- 0 until Network.size) yield Network.get(i)) map {
+      elem =>
+        elem match {
+          case un: Usernode => un.dumpFreeRiders
+        }
+    }
+  }
+
   def dumpMinAndMaxPercentages = {
     val percentages = (for (i <- 1 until Network.size) yield Network.get(i)) map {
       elem =>

@@ -33,12 +33,17 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   private def sendInfoAux(streamer: Usernode, info: Info, pid: Int) = {
     streamer.getProtocol(FastConfig.getLinkable(pid)) match {
       case link: Linkable if link.degree > 0 =>
-        link.getNeighbor(Random.nextInt(link.degree)) match {
-          case peern if peern.isUp => streamer.getProtocol(FastConfig.getTransport(pid)) match {
-            case trans: Transport => trans.send(streamer, peern, info, pid)
-            case _ => None
-          }
-          case peern if !peern.isUp => None
+        sample(0 until link.degree toList, fanout) map {
+          id =>
+            link.getNeighbor(id) match {
+              case peern if peern.isUp => streamer.getProtocol(FastConfig.getTransport(pid)) match {
+                case trans: Transport =>
+                  //println("streamer ending to " + id)
+                  trans.send(streamer, peern, info, pid)
+                case _ => None
+              }
+              case peern if !peern.isUp => None
+            }
         }
       case _ => println("Could not send. Is degree > 0 ?")
     }
@@ -50,10 +55,9 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
       case 0 =>
       case _ =>
         sendInfoAux(streamer, info, pid)
-        sendInfo(streamer, fanout - 1, pid, info)
+       // sendInfo(streamer, fanout - 1, pid, info)
     }
   }
-
 
   private def newInfo: Info = {
     val currentInfo = info;
@@ -65,8 +69,20 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   def processEvent(node: Node, pid: Int, event: Object) {
     //for now, no 1 should send messages to streamer
-  //  println("STREAMER GOT A MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    //  println("STREAMER GOT A MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
   }
+
+  private def sample[A](itms: List[A], sampleSize: Int) = {
+    def collect(vect: Vector[A], sampleSize: Int, acc: List[A]): List[A] = {
+      if (sampleSize == 0) acc
+      else {
+        val index = Random.nextInt(vect.size)
+        collect(vect.updated(index, vect(0)) tail, sampleSize - 1, vect(index) :: acc)
+      }
+    }
+
+    collect(itms toVector, sampleSize, Nil)
+  } //> sample: [A](itms: List[A], sampleSize: Int)List[A] 
 
 }
 

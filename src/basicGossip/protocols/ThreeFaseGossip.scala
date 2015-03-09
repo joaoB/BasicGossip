@@ -32,7 +32,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
                   case Some(peern) if peern.isUp =>
                     node.getProtocol(FastConfig.getTransport(pid)) match {
                       case trans: Transport => sendPropose(trans, node, peern,
-                        node.messageList.takeRight(5).map(_.value).toList, pid)
+                        node.messageList.takeRight(1).map(_.value).toList, pid)
                       case _ => ???
                     }
                   case _ =>

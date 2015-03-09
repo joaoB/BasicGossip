@@ -7,6 +7,8 @@ import hyparview.HyParViewJoinTest
 import peersim.core.ModifiableNode
 import peersim.core.Node
 import basicGossip.messages.Info
+import basicGossip.oracle.Oracle
+import peersim.core.Network
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
@@ -96,7 +98,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     }
     print("Free Riders of node: " + getID + " -> ")
     val fr = scoreList.filter {
-      x => x._2 <= -10
+      x => x._2 <= -15
     }
     fr.map {
       elems => print(elems._1 + " ")
@@ -104,7 +106,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     println()
 
     val FRneib = neigh match {
-      case Some(elem) => elem.count { x => x.getID < 100 }
+      case Some(elem) => elem.count { x => x.getID < Oracle.frPercentage * Network.size }
       case None => 0
     }
     println("Found " + fr.size + "/" + FRneib)

@@ -2,7 +2,7 @@
 SIZE 500
 
 # parameters of periodic execution
-CYCLES 200
+CYCLES 400
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -44,8 +44,8 @@ network.node basicGossip.node.Usernode
 
 ################### initialization ======================
 
-Oracle.FR_PERCENTAGE 0.6
-Oracle.MAX_HOPS 20
+Oracle.FR_PERCENTAGE 0
+Oracle.MAX_HOPS 17
 
 init.rndlink basicGossip.dynamics.MyWireKOut
 init.rndlink.k 5000
@@ -58,6 +58,7 @@ init.vals ProtocolInitializer
 #1 - Altruistic
 #2 - Max Hops
 #3 - Model 3
+#4 - three fase gossip
 init.vals.PROTOCOL_ID 4
 
 init.sch CDScheduler
