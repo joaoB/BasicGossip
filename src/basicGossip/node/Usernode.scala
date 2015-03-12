@@ -19,6 +19,10 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     messageList.+=(info)
   }
 
+  def containsElem(value: Int): Boolean = {
+    messageList.exists(_.value == value)
+  }
+
   def increaseScore(node: Node) {
     // used when we receive info from node
     val id = node.getID
@@ -46,27 +50,24 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
       id => id -> 0
     }: _*)
   }
+  
+  def getHpvProtocol: HyParViewJoinTest = 
+    this.getProtocol(HyParViewJoinTest.protocolID) match {
+        case prot: HyParViewJoinTest => prot
+  }
+  
 
   def randomGossip(fanout: Int, sender: Node): List[Long] = {
 
     val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID })
-    //.toSeq.sortBy(x => -x._2)
-    val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
+
+    /*val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
     goodNodes ++
       calculated.take(fanout - goodNodes.size).toList.map(_._1)
-    // .map(_._1)
-    // .toList
-    //calculated
-  }
+     
+      */
+    calculated.take(fanout).map(_._1) toList
 
-  def containsElem(value: Int): Boolean = {
-    messageList.exists(_.value == value)
-  }
-
-  def dumpMessageList = {
-    print("Node: " + this.getID + "->")
-    messageList.map(x => print(x.value + " "))
-    println()
   }
 
   def dumpAltruistics = {
@@ -79,16 +80,6 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
         elems => print(elems._1 + " ")
       }
     println()
-  }
-
-  def dumpPercentageOfMessage = {
-    print("Node: " + this.getID + "-> ")
-    println(messageList.size.toFloat / BasicGossip.cycles)
-  }
-
-  def dumpAmoutOfMessage = {
-    print("Node: " + this.getID + "-> ")
-    println(messageList.size + " / " + BasicGossip.cycles)
   }
 
   def dumpFreeRiders = {

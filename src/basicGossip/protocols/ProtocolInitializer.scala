@@ -16,6 +16,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
   val frPercentage = Oracle.frPercentage
   val protocolID = Configuration.getInt(name + "." + "PROTOCOL_ID")
+  val streamerID = 0
 
   def execute = {
     for (id <- 1 until Network.size()) {
@@ -53,72 +54,44 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
   def initializeViews = {
     //hyparview initialization
-    for (i <- 0 until Network.size) {
-      Network.get(i).getProtocol(HyParViewJoinTest.protocolID) match {
-        case prot: HyParViewJoinTest => prot.setMyNode(Network.get(i))
-        case _ => println("Check initializeViews@protocol initializer")
-      }
+    Oracle.nodesHpvProtocol map {
+      case (un: Usernode, prot: HyParViewJoinTest) => prot.setMyNode(Network.get(un.getID.toInt))
     }
-    //hyparview initialization
-    Network.get(0).getProtocol(HyParViewJoinTest.protocolID) match {
-      case prot: HyParViewJoinTest => for (i <- 1 until Network.size) { prot.join(Network.get(i), HyParViewJoinTest.protocolID) }
-      case _ => println("Check initializeViews@protocol initializer")
+
+    val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
+    Oracle.allNodesExceptStreamer map {
+      node => streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
     }
 
     globalHyParViewLinkage
-    // traditionalHyParViewLinkage
+    //traditionalHyParViewLinkage
   }
 
   private def globalHyParViewLinkage = {
     //streamer knows everybody
-    Network.get(0) match {
-      case streamer: Usernode =>
-        getLinkable(streamer) match {
-          case streamerLink: Link =>
-            for (i <- 1 until Network.size) {
-              val node = Network.get(i) match {
-                case un: Usernode =>
-                  un.getProtocol(HyParViewJoinTest.protocolID) match {
-                    case prot: HyParViewJoinTest =>
-                      un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
-                      prot.neighbors map {
-                        neigh =>
-                          getLinkable(un) match {
-                            case protLink: Link =>
-                              protLink.addNeighbor(Network.get(0))
-                              protLink.addNeighbor(neigh)
-                              streamerLink.addNeighbor(un)
-                            case _ => println("Check initializeViews@protocol initializer")
-                          }
-                      }
-                  }
-              }
-            }
+    val streamer = Oracle.getNode(streamerID)
+    val streamerLink = Oracle.getLinkable(streamer)
+    Oracle.nodesHpvProtocolExceptStreamer map {
+      case (un: Usernode, prot: HyParViewJoinTest) =>
+        un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
+        prot.neighbors map {
+          neigh =>
+            val unLink = Oracle.getLinkable(un)
+            unLink.addNeighbor(Network.get(streamerID))
+            unLink.addNeighbor(neigh)
+            streamerLink.addNeighbor(un)
         }
     }
-
   }
 
   private def traditionalHyParViewLinkage = {
-    //put result from hyparview into link protocol
-    for (i <- 0 until Network.size) {
-      Network.get(i) match {
-        case un: Usernode =>
-          un.getProtocol(HyParViewJoinTest.protocolID) match {
-            case prot: HyParViewJoinTest =>
-              un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
-              prot.neighbors map {
-                neigh =>
-                  getLinkable(un) match {
-                    case protLink: Link => protLink.addNeighbor(neigh)
-                    case _ => println("Check initializeViews@protocol initializer")
-                  }
-              }
-          }
-      }
+    Oracle.nodesHpvProtocol map {
+      case (un: Usernode, prot: HyParViewJoinTest) =>
+        un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
+        prot.neighbors map {
+          neigh => Oracle.getLinkable(un).addNeighbor(neigh)
+        }
     }
   }
 
-  private def getLinkable(usernode: Usernode) = usernode.getProtocol(FastConfig.getLinkable(0))
-  
 }

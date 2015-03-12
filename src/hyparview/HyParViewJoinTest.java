@@ -40,7 +40,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	private static String name;
 	public static int protocolID;
 
-	private static int activeViewSize = 20;
+	private static int activeViewSize = Configuration.getInt("HyParViewJoinTest.ACTIVE_VIEW_SIZE");
 	private static int passiveViewSize = 30;
 	private static int randomLenght = 6;
 	private static int passiveRandomLenght = 3;
@@ -61,7 +61,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	/*******************************************************
 	 * Vars for suporting the MembershipProtocol Interface
 	 *******************************************************/
-	protected Node myNode;
+	public Node myNode;
 	protected int msgSent;
 
 	/*******************************************************

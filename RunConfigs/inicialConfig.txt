@@ -1,8 +1,9 @@
 # network size
 SIZE 500
+HyParViewJoinTest.ACTIVE_VIEW_SIZE = 9
 
 # parameters of periodic execution
-CYCLES 400
+CYCLES 150
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -45,7 +46,7 @@ network.node basicGossip.node.Usernode
 ################### initialization ======================
 
 Oracle.FR_PERCENTAGE 0
-Oracle.MAX_HOPS 17
+Oracle.MAX_HOPS 11
 
 init.rndlink basicGossip.dynamics.MyWireKOut
 init.rndlink.k 5000
@@ -59,7 +60,7 @@ init.vals ProtocolInitializer
 #2 - Max Hops
 #3 - Model 3
 #4 - three fase gossip
-init.vals.PROTOCOL_ID 4
+init.vals.PROTOCOL_ID 1
 
 init.sch CDScheduler
 init.sch.protocol avg

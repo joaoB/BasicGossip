@@ -14,8 +14,8 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
   override def processEvent(node: Node, pid: Int, event: Object) = {
     event match {
       case info: Info => processInfo(node, pid, info)
-      case propose: Propose => processPropose(node, pid, propose)
-      case request: Request => processRequest(node, pid, request)
+      case propose: Propose => processPropose(Oracle.getNode(node.getID.toInt), pid, propose)
+      case request: Request => processRequest(Oracle.getNode(node.getID.toInt), pid, request)
       case _ => ???
     }
   }
@@ -44,14 +44,11 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     }
   }
 
-  def processPropose(node: Node, pid: Int, propose: Propose) = {
-    node match {
-      case un: Usernode =>
-        val wantedIds = generateRequest(un, propose)
-        //send to the guy who proposed what we want
-        sendWantedList(un, propose.sender, wantedIds, pid)
-      case _ =>
-    }
+  def processPropose(node: Usernode, pid: Int, propose: Propose) = {
+    val wantedIds = generateRequest(node, propose)
+    //send to the guy who proposed what we want
+    sendWantedList(node, propose.sender, wantedIds, pid)
+
   }
 
   def generateRequest(un: Usernode, propose: Propose): List[Int] = {
@@ -61,17 +58,16 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
 
   }
 
-  def processRequest(node: Node, pid: Int, request: Request) {
+  def processRequest(node: Usernode, pid: Int, request: Request) {
     //some node has this request
-    node match {
-      case un: Usernode => request.ids map {
-        id =>
-          un.messageList.find(_.value == id) match {
-            case Some(elem) => serveRequest(un, request.sender, elem, pid)
-            case None => //some guy requested something that he was not proposed
-          }
-      }
+    request.ids map {
+      id =>
+        node.messageList.find(_.value == id) match {
+          case Some(elem) => serveRequest(node, request.sender, elem, pid)
+          case None => //some guy requested something that he was not proposed
+        }
     }
+
   }
 
   def sendWantedList(sender: Usernode, receiver: Usernode, ids: List[Int], pid: Int) {
