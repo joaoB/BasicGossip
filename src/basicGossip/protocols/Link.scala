@@ -18,13 +18,5 @@ class Link(prefix: String) extends IdleProtocol(prefix) {
 
     len = 0
   }
-  //  override def addNeighbor(n: Node): Boolean = {
-  //    neighbors.find { x => x == n } match {
-  //      case Some(elem) => false
-  //      case None =>
-  //        neighbors = neighbors :+ n
-  //        true
-  //    }
-  //  }
 
 }

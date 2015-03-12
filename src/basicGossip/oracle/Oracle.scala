@@ -8,12 +8,18 @@ import peersim.core.Network
 import hyparview.HyParViewJoinTest
 import peersim.config.FastConfig
 import basicGossip.protocols.Link
+import scala.util.Random
 
 //Oracle has an eye on everythinggi
 class Oracle {
 
   val frPercentage = Configuration.getDouble("Oracle." + "FR_PERCENTAGE")
   val maxHops = Configuration.getInt("Oracle." + "MAX_HOPS")
+
+  val total = 1 until Network.size toList
+  val frAmount = (Network.size * frPercentage).toInt
+  val freeRiders = Random.shuffle(total).take(frAmount)
+  val altruistics = total diff freeRiders
 
   var maxHopInfo: Option[Info] = None
   var amountOfSentMessages: Int = 0
@@ -61,7 +67,7 @@ class Oracle {
         }
     } toList
   }
-  
+
   def nodeHpvProtocol(id: Int): (Usernode, HyParViewJoinTest) = {
     nodesHpvProtocol(List(getNode(id))).head
   }

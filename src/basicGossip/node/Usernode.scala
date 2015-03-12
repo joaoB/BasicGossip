@@ -58,16 +58,13 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   
 
   def randomGossip(fanout: Int, sender: Node): List[Long] = {
-
-    val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID })
-
+    val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID }.map(_._1))
     /*val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
     goodNodes ++
       calculated.take(fanout - goodNodes.size).toList.map(_._1)
      
       */
-    calculated.take(fanout).map(_._1) toList
-
+    calculated.take(fanout) toList
   }
 
   def dumpAltruistics = {

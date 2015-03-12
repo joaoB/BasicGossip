@@ -11,6 +11,7 @@ import peersim.core.IdleProtocol
 import peersim.config.FastConfig
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
+import scala.util.Random
 
 class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
@@ -19,35 +20,33 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   val streamerID = 0
 
   def execute = {
-    for (id <- 1 until Network.size()) {
-      id match {
-        case id if id < Network.size() * frPercentage => initializeFreeRider(Network.get(id))
-        case _ => initializeAltruistic(Network.get(id))
-      }
+
+    Oracle.altruistics map {
+      id => initializeAltruistic(Oracle.getNode(id))
     }
+
+    Oracle.freeRiders map {
+      id => initializeFreeRider(Oracle.getNode(id))
+    }
+
     initializeViews
     false
   }
 
-  def initializeAltruistic(node: Node) {
-    node match {
-      case myNode: Usernode =>
-        protocolID match {
-          case 1 => myNode.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
-          case 2 => myNode.setProtocol(0, new AltruisticWithMaxHops("basicGossip.protocols.AltruisticWithMaxHops"))
-          case 3 => myNode.setProtocol(0, new AltruisticThirdModel("basicGossip.protocols.AltruisticThirdModel"))
-          case 4 => myNode.setProtocol(0, new ThreeFaseGossip("basicGossip.protocols.ThreeFaseGossip"))
-          case _ => ???
-        }
+  def initializeAltruistic(node: Usernode) {
+    protocolID match {
+      case 1 => node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+      case 2 => node.setProtocol(0, new AltruisticWithMaxHops("basicGossip.protocols.AltruisticWithMaxHops"))
+      case 3 => node.setProtocol(0, new AltruisticThirdModel("basicGossip.protocols.AltruisticThirdModel"))
+      case 4 => node.setProtocol(0, new ThreeFaseGossip("basicGossip.protocols.ThreeFaseGossip"))
       case _ => ???
     }
+
   }
 
-  def initializeFreeRider(node: Node) {
-    node match {
-      case myNode: Usernode => myNode.setProtocol(0, new FRProtocol("Free Rider Protocol"))
-      case _ => ???
-    }
+  def initializeFreeRider(node: Usernode) {
+    
+    node.setProtocol(0, new FRProtocol("Free Rider Protocol"))
   }
 
   def initialize(node: Node) = {}
