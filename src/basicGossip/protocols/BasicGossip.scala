@@ -34,7 +34,7 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   private def sendInfo(streamer: Usernode, info: Info, pid: Int) = {
     val link = Oracle.getLinkable(streamer)
     if (link.degree > 0) {
-      DistinctRandom.sample(0 until link.degree toList, fanout) map {
+      DistinctRandom.sample(0 until link.degree toList, fanout - 2) map {
         id =>
           link.getNeighbor(id) match {
             case peern if peern.isUp =>

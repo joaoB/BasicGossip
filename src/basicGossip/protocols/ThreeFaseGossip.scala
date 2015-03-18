@@ -23,7 +23,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (!saveInfo(node, info)) {
       val linkable = node.getProtocol(FastConfig.getLinkable(pid))
-      node.randomGossip(BasicGossip.fanout, info.sender) map {
+      node.randomGossip(Oracle.fanout, info.sender) map {
         id =>
           linkable match {
             case link: Link =>
@@ -32,7 +32,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
                   case Some(peern) if peern.isUp =>
                     node.getProtocol(FastConfig.getTransport(pid)) match {
                       case trans: Transport => sendPropose(trans, node, peern,
-                        node.messageList.takeRight(1).map(_.value).toList, pid)
+                        generateProposeIds(node), pid)
                       case _ => ???
                     }
                   case _ =>
@@ -44,6 +44,11 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     }
   }
 
+  private def generateProposeIds(node: Usernode): List[Int] = {
+    node.messageList.toList.filter { x => x != null }.map(_.value).takeRight(1)
+
+  }
+
   def processPropose(node: Usernode, pid: Int, propose: Propose) = {
     val wantedIds = generateRequest(node, propose)
     //send to the guy who proposed what we want
@@ -53,7 +58,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
 
   def generateRequest(un: Usernode, propose: Propose): List[Int] = {
     //compute the ids that un wants
-    val messagesIds = un.messageList.map(_.value)
+    val messagesIds = un.messageList.toList.filter { x => x != null }.map(_.value)
     propose.ids.diff(messagesIds)
 
   }
@@ -62,9 +67,9 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     //some node has this request
     request.ids map {
       id =>
-        node.messageList.find(_.value == id) match {
-          case Some(elem) => serveRequest(node, request.sender, elem, pid)
-          case None => //some guy requested something that he was not proposed
+        node.messageList(id) match {
+          case info: Info => serveRequest(node, request.sender, info, pid)
+          case _ => //some guy requested something that he was not proposed
         }
     }
 

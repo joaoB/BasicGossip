@@ -37,7 +37,7 @@ class AltruisticProtocol(name: String) extends GeneralProtocol {
     if (!saveInfo(node, info)) {
       val linkable = Oracle.getLinkable(node)
 
-      node.randomGossip(BasicGossip.fanout, info.sender) map {
+      node.randomGossip(Oracle.fanout, info.sender) map {
         id =>
           if (linkable.degree() > 0) {
             val peern = linkable.getNeighborById(id) match {

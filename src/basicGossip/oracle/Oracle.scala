@@ -9,13 +9,16 @@ import hyparview.HyParViewJoinTest
 import peersim.config.FastConfig
 import basicGossip.protocols.Link
 import scala.util.Random
+import basicGossip.protocols.BasicGossip
 
 //Oracle has an eye on everythinggi
 class Oracle {
 
   val frPercentage = Configuration.getDouble("Oracle." + "FR_PERCENTAGE")
   val maxHops = Configuration.getInt("Oracle." + "MAX_HOPS")
-
+  val peerAlgorithm =  Configuration.getInt("Oracle." + "PEER_ALGORITHM")
+  val fanout = Configuration.getInt("Oracle.FANOUT", BasicGossip.fanout)
+  
   val total = 1 until Network.size toList
   val frAmount = (Network.size * frPercentage).toInt
   val freeRiders = Random.shuffle(total).take(frAmount)

@@ -1,9 +1,10 @@
 # network size
-SIZE 5000
-HyParViewJoinTest.ACTIVE_VIEW_SIZE = 9
+SIZE 1000
+HyParViewJoinTest.ACTIVE_VIEW_SIZE = 10
+#Oracle.FANOUT 6
 
 # parameters of periodic execution
-CYCLES 500
+CYCLES 300
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -45,8 +46,12 @@ network.node basicGossip.node.Usernode
 
 ################### initialization ======================
 
-Oracle.FR_PERCENTAGE 0.3
-Oracle.MAX_HOPS 11
+Oracle.FR_PERCENTAGE 0
+Oracle.MAX_HOPS 12
+
+#0 - do NOT send to freeriders
+#1 - send to random 
+Oracle.PEER_ALGORITHM 0
 
 init.rndlink basicGossip.dynamics.MyWireKOut
 init.rndlink.k 5000
@@ -60,7 +65,7 @@ init.vals ProtocolInitializer
 #2 - Max Hops
 #3 - Model 3
 #4 - three fase gossip
-init.vals.PROTOCOL_ID 1
+init.vals.PROTOCOL_ID 4
 
 init.sch CDScheduler
 init.sch.protocol avg

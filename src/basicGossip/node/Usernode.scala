@@ -12,15 +12,15 @@ import peersim.core.Network
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
-  var messageList = MutableList[Info]()
+  var messageList: Array[Info]= new Array[Info](BasicGossip.cycles)
   var scoreList = Map[Long, Int]()
 
   def saveMessage(info: Info) = {
-    messageList.+=(info)
+    messageList(info.value) = info
   }
 
   def containsElem(value: Int): Boolean = {
-    messageList.exists(_.value == value)
+    messageList(value) != null
   }
 
   def increaseScore(node: Node) {
@@ -50,21 +50,23 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
       id => id -> 0
     }: _*)
   }
-  
-  def getHpvProtocol: HyParViewJoinTest = 
+
+  def getHpvProtocol: HyParViewJoinTest =
     this.getProtocol(HyParViewJoinTest.protocolID) match {
-        case prot: HyParViewJoinTest => prot
-  }
-  
+      case prot: HyParViewJoinTest => prot
+    }
 
   def randomGossip(fanout: Int, sender: Node): List[Long] = {
-    val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID }.map(_._1))
-    /*val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
-    goodNodes ++
-      calculated.take(fanout - goodNodes.size).toList.map(_._1)
-     
-      */
-    calculated.take(fanout) toList
+    Oracle.peerAlgorithm match {
+      case 0 =>
+        val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID && x._2 > -15 })
+        val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
+        goodNodes ++
+          calculated.take(fanout - goodNodes.size).toList.map(_._1)
+      case 1 =>
+        val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID })
+        calculated.take(fanout).map(_._1) toList
+    }
   }
 
   def dumpAltruistics = {
@@ -103,7 +105,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   override def clone(): Object = {
     this.scoreList = Map[Long, Int]()
-    this.messageList = new MutableList[Info]()
+    this.messageList = new Array[Info](BasicGossip.cycles)
     super.clone()
   }
 

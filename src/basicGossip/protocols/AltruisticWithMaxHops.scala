@@ -5,13 +5,14 @@ import basicGossip.node.Usernode
 import peersim.config.Configuration
 import peersim.config.FastConfig
 import peersim.transport.Transport
+import basicGossip.oracle.Oracle
 
 class AltruisticWithMaxHops(name: String) extends AltruisticProtocol(name) {
 
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     saveInfo(node, info)
     val linkable = node.getProtocol(FastConfig.getLinkable(pid))
-    node.randomGossip(BasicGossip.fanout, info.sender) map {
+    node.randomGossip(Oracle.fanout, info.sender) map {
       id =>
         linkable match {
           case link: Link =>
