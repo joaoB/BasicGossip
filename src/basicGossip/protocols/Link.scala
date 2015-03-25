@@ -5,8 +5,10 @@ import peersim.core.Node
 
 class Link(prefix: String) extends IdleProtocol(prefix) {
 
+  def getNeighbors = neighbors toList
+  
   def getNeighborById(id: Long): Option[Node] = {
-    neighbors.find { x => x.getID == id }
+    neighbors.find (_.getID == id)
   }
 
   def removeNeighbor(node: Node) {
@@ -15,7 +17,6 @@ class Link(prefix: String) extends IdleProtocol(prefix) {
 
   def cleanAll = {
     neighbors = new Array[Node](10)
-
     len = 0
   }
 

@@ -1,10 +1,10 @@
 # network size
-SIZE 1000
+SIZE 5000
 HyParViewJoinTest.ACTIVE_VIEW_SIZE = 10
-#Oracle.FANOUT 6
+Oracle.FANOUT 8
 
 # parameters of periodic execution
-CYCLES 300
+CYCLES 100
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -33,7 +33,6 @@ protocol.avg.transport tr
 protocol.view hyparview.HyParViewJoinTest
 protocol.view.step CYCLE
 
-
 protocol.urt UniformRandomTransport
 protocol.urt.mindelay (CYCLE*MINDELAY)/100
 protocol.urt.maxdelay (CYCLE*MAXDELAY)/100
@@ -46,7 +45,7 @@ network.node basicGossip.node.Usernode
 
 ################### initialization ======================
 
-Oracle.FR_PERCENTAGE 0
+Oracle.FR_PERCENTAGE 0.2
 Oracle.MAX_HOPS 12
 
 #0 - do NOT send to freeriders
@@ -65,12 +64,11 @@ init.vals ProtocolInitializer
 #2 - Max Hops
 #3 - Model 3
 #4 - three fase gossip
-init.vals.PROTOCOL_ID 4
+init.vals.PROTOCOL_ID 1
 
 init.sch CDScheduler
 init.sch.protocol avg
 #init.sch.randstart
-
 
 
 ################ control ==============================

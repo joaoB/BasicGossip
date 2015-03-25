@@ -12,48 +12,24 @@ import peersim.core.Node
 
 class AltruisticProtocol(name: String) extends GeneralProtocol {
 
-  //  override def sendMessage(node: Usernode, info: Info, pid: Int) {
-  //    if (!saveInfo(node, info)) {
-  //      val linkable = node.getProtocol(FastConfig.getLinkable(pid))
-  //      for (i <- 0 until BasicGossip.fanout) {
-  //        linkable match {
-  //          case link: Linkable =>
-  //            if (link.degree() > 0) {
-  //              val peern = link.getNeighbor(Random.nextInt(link.degree))
-  //              if (peern.isUp()) {
-  //                node.getProtocol(FastConfig.getTransport(pid)) match {
-  //                  case trans: Transport =>
-  //                    sendInfo(trans, node, peern, Info(info.value, node, info.hop + 1), pid)
-  //                  case _ => ???
-  //                }
-  //              }
-  //            }
-  //        }
-  //      }
-  //    }
-  //  }
-
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (!saveInfo(node, info)) {
       val linkable = Oracle.getLinkable(node)
-
       node.randomGossip(Oracle.fanout, info.sender) map {
-        id =>
-          if (linkable.degree() > 0) {
-            val peern = linkable.getNeighborById(id) match {
-              case Some(peern) if peern.isUp =>
-                node.getProtocol(FastConfig.getTransport(pid)) match {
-                  case trans: Transport =>
-                    sendInfo(trans, node, peern, Info(info.value, node, info.hop + 1), pid)
-                  case _ => ???
-                }
-              case _ => sendToRandom(node, Info(info.value, node, info.hop + 1), pid)
-            }
-
+        case id if linkable.degree() > 0 =>
+          linkable.getNeighborById(id) match {
+            case Some(peern) if peern.isUp =>
+              node.getProtocol(FastConfig.getTransport(pid)) match {
+                case trans: Transport =>
+                  sendInfo(trans, node, peern, Info(info.value, node, info.hop + 1), pid)
+                case _ => ???
+              }
+            case _ => sendToRandom(node, Info(info.value, node, info.hop + 1), pid)
           }
+
+        case _ => //link.degre <= 0
 
       }
     }
-  }
-
+  } 
 }

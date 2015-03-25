@@ -12,23 +12,23 @@ import peersim.core.Network
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
-  var messageList: Array[Info]= new Array[Info](BasicGossip.cycles)
-  var scoreList = Map[Long, Int]()
+  var messageList: Array[Option[Info]] = Array.fill(BasicGossip.cycles)(None: Option[Info])
+  var scoreList = Map[Long, Float]()
+  var waitingConfirm = MutableList[Int]()
+  var isWaitingConnection = false
 
   def saveMessage(info: Info) = {
-    messageList(info.value) = info
+    messageList(info.value) = Some(info)
   }
 
-  def containsElem(value: Int): Boolean = {
-    messageList(value) != null
-  }
+  def containsElem(value: Int): Boolean = messageList(value).isDefined
 
   def increaseScore(node: Node) {
     // used when we receive info from node
     val id = node.getID
     scoreList = scoreList match {
       case map if map.contains(id) =>
-        scoreList.updated(id, scoreList(id) + 1)
+        scoreList.updated(id, scoreList(id) + 0.05F)
       case _ =>
         scoreList.updated(id, 1)
     }
@@ -39,7 +39,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     val id = node.getID
     scoreList = scoreList match {
       case map if map.contains(id) =>
-        scoreList.updated(id, scoreList(id) - 1)
+        scoreList.updated(id, scoreList(id) - 0.05F)
       case _ =>
         scoreList.updated(id, -1)
     }
@@ -47,7 +47,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def initializeScoreList(ids: Seq[Long]) = {
     scoreList = Map(ids map {
-      id => id -> 0
+      id => id -> 1F
     }: _*)
   }
 
@@ -56,57 +56,62 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
       case prot: HyParViewJoinTest => prot
     }
 
-  def randomGossip(fanout: Int, sender: Node): List[Long] = {
+//  def randomGossip(fanout: Int, sender: Node): List[Long] = {
+//    Oracle.peerAlgorithm match {
+//      case 0 =>
+//        val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID && x._2 > -20 })
+//        calculated.take(fanout).toList.map(_._1)
+//        scoreList.filter { x => x._1 != 0 && x._2 > -15 && x._1 != sender.getID } map (_._1) toList
+//      case 1 =>
+//        scoreList.filter { x => x._1 != 0 && x._1 != sender.getID } map (_._1) toList
+//    }
+//  }
+
+  def randomGossip(fanout: Int, sender: Node): List[Long] = 
     Oracle.peerAlgorithm match {
-      case 0 =>
-        val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID && x._2 > -15 })
-        val goodNodes = calculated.filter(_._2 > 7).toList.map(_._1)
-        goodNodes ++
-          calculated.take(fanout - goodNodes.size).toList.map(_._1)
-      case 1 =>
-        val calculated = Random.shuffle(scoreList.filter { x => x._1 != 0 && x._1 != sender.getID })
-        calculated.take(fanout).map(_._1) toList
-    }
+    case 0 => 
+      val probability = Random.nextFloat
+      scoreList.filter(x => x._1 != 0 && x._1 != sender.getID && x._2 > probability).toList.map(_._1)
+    case 1 =>
+      scoreList.filter(x => x._1 != 0 && x._1 != sender.getID).toList.map(_._1)
   }
+  
+  
+  def dumpAltruistics =
+    scoreList.filter(_._2 > 0.5).map(_._1) toList
 
-  def dumpAltruistics = {
-    print("Altruistics of node: " + getID + " -> ")
-    //val altruistic =
-    scoreList.filter {
-      x => x._2 >= 0
-    }
-      .map {
-        elems => print(elems._1 + " ")
-      }
-    println()
-  }
-
-  def dumpFreeRiders = {
-    val neigh = this.getProtocol(HyParViewJoinTest.protocolID) match {
-      case prot: HyParViewJoinTest => Some(prot.neighbors)
-      case _ => None
-    }
-    print("Free Riders of node: " + getID + " -> ")
-    val fr = scoreList.filter {
-      x => x._2 <= -15
-    }
-    fr.map {
-      elems => print(elems._1 + " ")
-    }
-    println()
-
-    val FRneib = neigh match {
-      case Some(elem) => elem.count { x => x.getID < Oracle.frPercentage * Network.size }
-      case None => 0
-    }
-    println("Found " + fr.size + "/" + FRneib)
-    //  println("Found " + neigh)
-  }
+  def dumpFreeRiders =
+    scoreList.filter(_._2 <= 0).map(_._1) toList
 
   override def clone(): Object = {
-    this.scoreList = Map[Long, Int]()
-    this.messageList = new Array[Info](BasicGossip.cycles)
+    this.scoreList = Map[Long, Float]()
+    this.messageList = Array.fill(BasicGossip.cycles)(None: Option[Info])
+    this.waitingConfirm = new MutableList[Int]()
     super.clone()
   }
 
+  private def hasFreeRiders: Boolean = scoreList.values.exists(_ < 0)
+
+  def canAcceptJoinRequest: Boolean =
+    Oracle.getLinkable(this).getNeighbors.size < Oracle.fanout + 2 || hasFreeRiders
+
+  def altruisticsNeighbors: List[Long] = scoreList.filter(_._2 > 0.5).map(_._1) toList
+
+//  def addWaitingConfirm(id: Int) =
+//    if (!waitingConfirm.contains(id)) waitingConfirm += id
+//
+//  def addNewNeighbor(id: Int): Boolean =
+//    if (isWaitingConnection) {
+//      scoreList = scoreList.updated(id, 0)
+//      Oracle.getLinkable(this).addNeighbor(Network.get(id))
+//      isWaitingConnection = false
+//      true
+//    } else false
+//
+//  def receivePositiveConfirm(nid: Int) = 
+//    if (waitingConfirm.contains(nid)) {
+//      scoreList = scoreList.updated(nid, 0)
+//      Oracle.getLinkable(this).addNeighbor(Network.get(nid))
+//    }
+  
 }

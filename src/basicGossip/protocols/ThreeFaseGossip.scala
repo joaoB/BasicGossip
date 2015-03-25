@@ -22,31 +22,30 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
 
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (!saveInfo(node, info)) {
-      val linkable = node.getProtocol(FastConfig.getLinkable(pid))
+      val linkable = Oracle.getLinkable(node)
+      val proposedIds = generateProposeIds(node);
+
       node.randomGossip(Oracle.fanout, info.sender) map {
         id =>
-          linkable match {
-            case link: Link =>
-              if (link.degree() > 0) {
-                val peern = link.getNeighborById(id) match {
-                  case Some(peern) if peern.isUp =>
-                    node.getProtocol(FastConfig.getTransport(pid)) match {
-                      case trans: Transport => sendPropose(trans, node, peern,
-                        generateProposeIds(node), pid)
-                      case _ => ???
-                    }
-                  case _ =>
+          if (linkable.degree() > 0) {
+            val peern = linkable.getNeighborById(id) match {
+              case Some(peern) if peern.isUp =>
+                node.getProtocol(FastConfig.getTransport(pid)) match {
+                  case trans: Transport => sendPropose(trans, node, peern,
+                    proposedIds, pid)
+                  case _ => ???
                 }
+              case _ =>
+            }
 
-              }
           }
+
       }
     }
   }
 
   private def generateProposeIds(node: Usernode): List[Int] = {
-    node.messageList.toList.filter { x => x != null }.map(_.value).takeRight(1)
-
+    node.messageList.toList.filter(_.isDefined).map(_.get.value).takeRight(1)
   }
 
   def processPropose(node: Usernode, pid: Int, propose: Propose) = {
@@ -58,7 +57,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
 
   def generateRequest(un: Usernode, propose: Propose): List[Int] = {
     //compute the ids that un wants
-    val messagesIds = un.messageList.toList.filter { x => x != null }.map(_.value)
+    val messagesIds = un.messageList.toList.filter(_.isDefined).map(_.get.value).takeRight(1)
     propose.ids.diff(messagesIds)
 
   }
@@ -68,8 +67,8 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     request.ids map {
       id =>
         node.messageList(id) match {
-          case info: Info => serveRequest(node, request.sender, info, pid)
-          case _ => //some guy requested something that he was not proposed
+          case Some(info) => serveRequest(node, request.sender, info, pid)
+          case None => println("some guy requested something that he was not proposed") //some guy requested something that he was not proposed
         }
     }
 

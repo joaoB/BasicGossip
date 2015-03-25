@@ -65,4 +65,11 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
     node.decreaseScore(peern)
     Oracle.saveHop(info)
   }
+  
+  def sendSimpleMessage(sender: Usernode, receiver: Usernode, message : Any, pid: Int){
+    sender.getProtocol(FastConfig.getTransport(pid)) match {
+      case trans: Transport => trans.send(sender, receiver, message, pid)
+      case _ => //dont know how to send this message
+    }
+  }
 }

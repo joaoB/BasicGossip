@@ -1,19 +1,17 @@
 package hyparview;
 
-
 import java.util.ArrayList;
+import java.util.Random;
 
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
-import peersim.core.CommonState;
 import peersim.core.Linkable;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.util.IndexIterator;
 import peersim.util.RandPermutation;
 
-
-public class HyParViewJoinTest implements Linkable, CDProtocol{
+public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 	/***************************************
 	 * Parameters for configuration
@@ -40,10 +38,11 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	private static String name;
 	public static int protocolID;
 
-	private static int activeViewSize = Configuration.getInt("HyParViewJoinTest.ACTIVE_VIEW_SIZE");
-	private static int passiveViewSize = 30;
-	private static int randomLenght = 6;
-	private static int passiveRandomLenght = 3;
+	public static int activeViewSize = Configuration
+			.getInt("HyParViewJoinTest.ACTIVE_VIEW_SIZE");
+	public static int passiveViewSize = 30;// 30;
+	public static int randomLenght = 6;// 6;
+	public static int passiveRandomLenght = 3;// 3;
 
 	// For selecting witch overlay to monitor
 	private int overlayMonitor = MON_ACTIVE_VAL;
@@ -51,12 +50,12 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	/***************************************
 	 * Internal State of the node protocol
 	 ***************************************/
-	private Node[] activeMembership;
-	private Node[] passiveMembership; // Update 24-10-2006: Changed from
+	public Node[] activeMembership;
+	public Node[] passiveMembership; // Update 24-10-2006: Changed from
 										// AgeableNode to Node
 
-	private int activeDegree = 0;
-	private int passiveDegree = 0;
+	public int activeDegree = 0;
+	public int passiveDegree = 0;
 
 	/*******************************************************
 	 * Vars for suporting the MembershipProtocol Interface
@@ -67,7 +66,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	/*******************************************************
 	 * Other vars
 	 *******************************************************/
-	private IndexIterator peerIterator;
+	public IndexIterator peerIterator;
 	ArrayList<Node> sentList;
 
 	/*******************************************************
@@ -81,30 +80,30 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	 */
 	public HyParViewJoinTest(String name) {
 		// Read configuration
-//		HyParViewJoinTest.name = name;
+		// HyParViewJoinTest.name = name;
 		HyParViewJoinTest.protocolID = Configuration.lookupPid(name
 				.replaceFirst("protocol.", ""));
-//		HyParViewJoinTest.activeViewSize = Configuration
-//				.getInt(HyParViewJoinTest.name + "." + PAR_ACTIVE_VIEW_SIZE);
-//		HyParViewJoinTest.passiveViewSize = Configuration
-//				.getInt(HyParViewJoinTest.name + "." + PAR_PASSIVE_VIEW_SIZE);
-//		HyParViewJoinTest.randomLenght = Configuration
-//				.getInt(HyParViewJoinTest.name + "." + PAR_RANDOM_LENGHT);
-//		HyParViewJoinTest.passiveRandomLenght = Configuration
-//				.getInt(HyParViewJoinTest.name + "."
-//						+ PAR_PASSIVE_RANDOM_LENGHT);
-//
-//		String monitorizationTarget = Configuration
-//				.getString(HyParViewJoinTest.name + "." + PAR_MONITORIZATION);
-//		if (monitorizationTarget.compareTo(MON_ACTIVE) == 0)
-//			this.overlayMonitor = MON_ACTIVE_VAL;
-//		else if (monitorizationTarget.compareTo(MON_PASSIVE) == 0)
-//			this.overlayMonitor = MON_PASSIVE_VAL;
-//		else {
-//			System.err
-//					.println("Invalid value for the Monitorization parameter.");
-//			System.exit(1);
-//		}
+		// HyParViewJoinTest.activeViewSize = Configuration
+		// .getInt(HyParViewJoinTest.name + "." + PAR_ACTIVE_VIEW_SIZE);
+		// HyParViewJoinTest.passiveViewSize = Configuration
+		// .getInt(HyParViewJoinTest.name + "." + PAR_PASSIVE_VIEW_SIZE);
+		// HyParViewJoinTest.randomLenght = Configuration
+		// .getInt(HyParViewJoinTest.name + "." + PAR_RANDOM_LENGHT);
+		// HyParViewJoinTest.passiveRandomLenght = Configuration
+		// .getInt(HyParViewJoinTest.name + "."
+		// + PAR_PASSIVE_RANDOM_LENGHT);
+		//
+		// String monitorizationTarget = Configuration
+		// .getString(HyParViewJoinTest.name + "." + PAR_MONITORIZATION);
+		// if (monitorizationTarget.compareTo(MON_ACTIVE) == 0)
+		// this.overlayMonitor = MON_ACTIVE_VAL;
+		// else if (monitorizationTarget.compareTo(MON_PASSIVE) == 0)
+		// this.overlayMonitor = MON_PASSIVE_VAL;
+		// else {
+		// System.err
+		// .println("Invalid value for the Monitorization parameter.");
+		// System.exit(1);
+		// }
 
 		// Init protocol configuration
 		this.activeMembership = new Node[HyParViewJoinTest.activeViewSize];
@@ -121,7 +120,8 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 		// Start other protocol information with default values
 		this.myNode = null;
 		this.msgSent = 0;
-		this.peerIterator = new RandPermutation(CommonState.r);
+		// this.peerIterator = new RandPermutation(CommonState.r);
+		this.peerIterator = new RandPermutation(new Random());
 		this.sentList = null;
 
 	}
@@ -134,6 +134,55 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	 * This is used to generate fixed lenght random walks in the overlay when
 	 * adding nodes this assumes no null in between nodes at active view
 	 */
+
+	public void simpleJoin(Node newMember, int protocolID) {
+		ArrayList<Node> peersSelected = new ArrayList<Node>();
+		this.peerIterator.reset(this.activeDegree);
+		peersSelected.add(this.activeMembership[this.peerIterator.next()]);
+
+		((HyParViewJoinTest) peersSelected.remove(0).getProtocol(protocolID))
+				.simpleRandomWalk(newMember, HyParViewJoinTest.randomLenght,
+						myNode, protocolID);
+		this.msgSent++; // Increase the number of messages sent by this node
+	}
+
+	public boolean simpleRandomWalk(Node newMember, int ttl, Node originator,
+			int protocolID) {
+		boolean status = this.myNode.isUp();
+		if (status) {
+			if (ttl <= 0 || this.activeDegree <= 1 || this.neighbors().length < 4) {
+				if (this.canAddNeighbour2ActiveMembership(newMember)) {
+					if (((HyParViewJoinTest) newMember
+							.getProtocol(HyParViewJoinTest.protocolID))
+							.simpleJoinConnect(this.myNode)) {
+
+						this.simpleActiveMembershipAddNeighbour(newMember);
+					}
+				}
+			} else {
+				Node destino = null;
+				this.peerIterator.reset(this.activeDegree);
+				while (destino == null || destino.equals(originator))
+					destino = this.activeMembership[this.peerIterator.next()];
+
+				((HyParViewJoinTest) destino.getProtocol(protocolID))
+						.simpleRandomWalk(newMember, ttl - 1, this.myNode,
+								protocolID);
+			}
+		}
+
+		return status;
+	}
+
+	public boolean simpleJoinConnect(Node peer) {
+		Boolean status = null;
+		if (this.myNode.isUp()) {
+			status = new Boolean(this.simpleActiveMembershipAddNeighbour(peer));
+		}
+
+		return status;
+	}
+
 	public boolean randomWalk(Node newMember, int ttl, Node originator,
 			int protocolID) {
 		boolean status = this.myNode.isUp(); // check if node is up
@@ -160,15 +209,15 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 						if (!this.activeMembershipAddNeighbour(newMember)) {
 							// TODO: is this the better aproach??? Think about
 							// this with time
-						//	System.err
-							//		.println("Warning: A random walked stoped here but i could not add the new node: random walk droped!");
+							// System.err
+							// .println("Warning: A random walked stoped here but i could not add the new node: random walk droped!");
 						} else {
-//							this.jstat.newNeighbor();
+							// this.jstat.newNeighbor();
 						}
 					} else {
 						// This shoud not happen
-						//System.err
-							//	.println("Warning: A peer i received in a random walk refused my connect atempt");
+						// System.err
+						// .println("Warning: A peer i received in a random walk refused my connect atempt");
 					}
 				}
 			} else {
@@ -202,6 +251,10 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 				i--;
 			}
 		}
+	}
+
+	public int getActiveDegree() {
+		return this.activeDegree;
 	}
 
 	private void mergeView(ArrayList<Node> myList, ArrayList<Node> peerList) {
@@ -260,13 +313,14 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 			if (this.activeDegree == HyParViewJoinTest.activeViewSize) {
 				// Drop someone so that we can add this new node
 				this.activeRemove();
-	//			this.jstat.randomRemoved();
+				// this.jstat.randomRemoved();
 				this.compressArray(this.activeMembership);
 			}
 
 			status = new Boolean(this.activeMembershipAddNeighbour(peer));
-			if (status.booleanValue()){}
-		//		this.jstat.newNeighbor();
+			if (status.booleanValue()) {
+			}
+			// this.jstat.newNeighbor();
 		}
 
 		return status;
@@ -324,10 +378,10 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 			this.activeDegree--;
 			this.compressArray(this.activeMembership);
 			this.passiveMembershipAddNeighbour(temp); // 22-novembro-2006
-			//this.jstat.disconnected();
+			// this.jstat.disconnected();
 		} else {
-		//	System.err
-			//		.println("Warning: Received a disconnect notification from someone i am not neighbour");
+			// System.err
+			// .println("Warning: Received a disconnect notification from someone i am not neighbour");
 		}
 	}
 
@@ -377,6 +431,26 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 		return sucess;
 	}
 
+	private boolean simpleActiveMembershipAddNeighbour(Node neighbour) {
+		boolean sucess = false;
+		Node[] a = this.activeMembership;
+		this.activeMembership = new Node[this.activeMembership.length * 2];
+		System.arraycopy(a, 0, this.activeMembership, 0, a.length);
+		for (int i = 0; !sucess; i++) {
+			if (this.activeMembership[i] == null) {
+				this.activeMembership[i] = neighbour;
+				this.activeDegree++;
+
+				// Garantee that the node is not in the passive membership
+				this.passiveRemove(neighbour);
+
+				sucess = true;
+			}
+		}
+
+		return sucess;
+	}
+
 	/**
 	 * Add's this node to the passive membership checking the associated
 	 * constraints
@@ -395,8 +469,8 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 				// Select random member to drop
 				this.peerIterator.reset(HyParViewJoinTest.passiveViewSize);
 				this.passiveMembership[this.peerIterator.next()] = neighbour;
-				//System.err
-					//	.println("Warning: random member droped in passive view");
+				// System.err
+				// .println("Warning: random member droped in passive view");
 			}
 			sucess = true;
 		}
@@ -503,7 +577,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 			nhm.myNode = null;
 			nhm.msgSent = 0;
 			nhm.sentList = null;
-			nhm.peerIterator = new RandPermutation(CommonState.r); // Change
+			nhm.peerIterator = new RandPermutation(new Random()); // Change
 																	// Log:
 																	// 13-11-2006:Jleitao
 																	// Notei que
@@ -512,7 +586,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 																	// coisa...
 
 			// Join Observation
-		//	nhm.jstat = new JoinStatistics();
+			// nhm.jstat = new JoinStatistics();
 		} catch (CloneNotSupportedException e) {
 			// never happens
 		}
@@ -525,16 +599,14 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 
 	public void nextCycle(Node node, int protocolID) {
 		// This is used to do the clean up for each round.
-		/*System.out.println("Node of cycle: " + node.getID() + " -> ");
-		System.out.println("Node: " + this.myNode.getID() + " -> ");
-
-		for (Node nodee : activeMembership) {
-			if (nodee != null) {
-				System.out.println(nodee.getID() + " ");
-			}
-		}
-		System.out.println();*/
-	//	this.jstat.reset();
+		/*
+		 * System.out.println("Node of cycle: " + node.getID() + " -> ");
+		 * System.out.println("Node: " + this.myNode.getID() + " -> ");
+		 * 
+		 * for (Node nodee : activeMembership) { if (nodee != null) {
+		 * System.out.println(nodee.getID() + " "); } } System.out.println();
+		 */
+		// this.jstat.reset();
 	}
 
 	/****************************************
@@ -654,7 +726,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 				((HyParViewJoinTest) this.activeMembership[position]
 						.getProtocol(HyParViewJoinTest.protocolID))
 						.disconnect(this.myNode);
-			//	this.jstat.randomRemoved();
+				// this.jstat.randomRemoved();
 				this.msgSent++; // number of msgs rise cause of disconnect msg
 								// (maybe this should not happen)
 			} else {
@@ -663,10 +735,10 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 				this.activeDegree++;
 			}
 
-		//	this.jstat.newNeighbor();
+			// this.jstat.newNeighbor();
 			this.activeMembership[position] = newMember;
 		} else {
-			//System.err.println("Warning: Connection to new member failed");
+			// System.err.println("Warning: Connection to new member failed");
 		}
 	}
 
@@ -766,7 +838,6 @@ public class HyParViewJoinTest implements Linkable, CDProtocol{
 	public void setMonitorPassive() {
 		this.overlayMonitor = MON_PASSIVE_VAL;
 	}
-
 
 	// Class end's here!
 }

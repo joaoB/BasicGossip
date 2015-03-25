@@ -16,14 +16,15 @@ class Oracle {
 
   val frPercentage = Configuration.getDouble("Oracle." + "FR_PERCENTAGE")
   val maxHops = Configuration.getInt("Oracle." + "MAX_HOPS")
-  val peerAlgorithm =  Configuration.getInt("Oracle." + "PEER_ALGORITHM")
+  val peerAlgorithm = Configuration.getInt("Oracle." + "PEER_ALGORITHM")
   val fanout = Configuration.getInt("Oracle.FANOUT", BasicGossip.fanout)
-  
+
   val total = 1 until Network.size toList
   val frAmount = (Network.size * frPercentage).toInt
   val freeRiders = Random.shuffle(total).take(frAmount)
   val altruistics = total diff freeRiders
-
+  println(altruistics.size)
+  println(freeRiders.size)
   var maxHopInfo: Option[Info] = None
   var amountOfSentMessages: Int = 0
   var avgHops = MutableList[Int]()
@@ -79,6 +80,8 @@ class Oracle {
     usernode.getProtocol(FastConfig.getLinkable(0)) match {
       case link: Link => link
     }
+  
+    def getLinkable(nid: Int): Link = getLinkable(getNode(nid))
 
   def getNode(id: Int): Usernode = {
     Network.get(id) match {

@@ -12,6 +12,8 @@ import peersim.config.FastConfig
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
 import scala.util.Random
+import utils.Organize
+import hyparview.SimpleJoin
 
 class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
@@ -45,7 +47,6 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   }
 
   def initializeFreeRider(node: Usernode) {
-    
     node.setProtocol(0, new FRProtocol("Free Rider Protocol"))
   }
 
@@ -58,12 +59,41 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     }
 
     val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
+
     Oracle.allNodesExceptStreamer map {
       node => streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
     }
+    rejoinIsolated
 
     globalHyParViewLinkage
     //traditionalHyParViewLinkage
+
+/*    Oracle.nodeHpvProtocol(Oracle.getLinkable(2).getNeighbors.head.getID.toInt)._2.simpleJoin(Oracle.getNode(2), HyParViewJoinTest.protocolID)
+
+    Oracle.allNodesExceptStreamer map {
+      elem => Oracle.nodeHpvProtocol(Oracle.getLinkable(elem.getID.toInt).getNeighbors.head.getID.toInt)._2.simpleJoin(Oracle.getNode(elem.getID.toInt), HyParViewJoinTest.protocolID)
+
+    }*/
+
+    /*Oracle.nodesHpvProtocol /*filter (_._1.getID == 2) */ map {
+      elem =>
+        print("NODE: " + elem._1.getID + " -> ")
+        elem._2.neighbors map {
+          x => print(x.getID + " ")
+        }
+        println
+    }*/
+  }
+
+  private def rejoinIsolated = {
+    def rejoinIsolatedAux: Boolean = {
+      val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
+      val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.fanout / 2) map {
+        a => streamerHpv._2.join(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
+      }
+      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.fanout / 2  )
+    }
+    while (rejoinIsolatedAux) {}
   }
 
   private def globalHyParViewLinkage = {
