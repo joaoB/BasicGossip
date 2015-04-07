@@ -14,6 +14,8 @@ import peersim.config.FastConfig
 import scala.util.Random
 import utils.DistinctRandom
 import basicGossip.oracle.Oracle
+import basicGossip.observers.AvgReliability
+import hyparview.HyParViewJoinTest
 
 class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProtocol with EDProtocol {
 
@@ -22,17 +24,34 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   val fanout = Math.log(networkSize).toInt
   var info: Int = 0
 
-  override def nextCycle(node: Node, pid: Int): Unit = {
-    if (info % 50 == 0) println("generating new info " + info)
+  //  def a = {
+  //        val a = new Thread(new Runnable {
+  //      def run {
+  //        while (info < cycles) {
+  //          /*if (info % 50 == 0) */println("generating new info ///////////////////////////////////////////////////////////////////////////" + info)
+  //          sendInfo(Oracle.getNode(0), newInfo, 0)
+  //         // Thread.sleep(20)
+  //        }
+  //        AvgReliability.run
+  //      }
+  //    })
+  //
+  //    a.start
+  //    if(info + 10 == cycles)a.join
+  //  }
 
-    node.getIndex match {
-      case 0 => sendInfo(Oracle.getNode(0), newInfo, pid)
-      case _ => //only streamer does stuff at start of new cycle
+  override def nextCycle(node: Node, pid: Int): Unit = {
+
+    if (info == 550) {
+      Oracle.addAltruisticNode
     }
+
+    sendInfo(Oracle.getNode(0), newInfo, pid)
   }
 
   private def sendInfo(streamer: Usernode, info: Info, pid: Int) = {
     val link = Oracle.getLinkable(streamer)
+    // println("sending")
     if (link.degree > 0) {
       DistinctRandom.sample(0 until link.degree toList, fanout) map {
         id =>
@@ -40,7 +59,10 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
             case peern if peern.isUp =>
               streamer.getProtocol(FastConfig.getTransport(pid)) match {
                 case trans: Transport =>
-                  //println("streamer ending to " + id)
+                  //println("sending to " + peern.getID)
+//                  if (info.value == 520) {
+//                    trans.send(streamer, Oracle.getNode(1000), info, pid)
+//                  }
                   trans.send(streamer, peern, info, pid)
                 case _ => None
               }
@@ -66,4 +88,3 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 }
 
 object BasicGossip extends BasicGossip("Basic Gossip")
-

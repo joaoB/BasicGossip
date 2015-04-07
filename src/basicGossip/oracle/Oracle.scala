@@ -10,6 +10,12 @@ import peersim.config.FastConfig
 import basicGossip.protocols.Link
 import scala.util.Random
 import basicGossip.protocols.BasicGossip
+import basicGossip.node.Usernode
+import basicGossip.protocols.AltruisticProtocol
+import peersim.core.Node
+import peersim.core.GeneralNode
+import basicGossip.protocols.FRProtocol
+import basicGossip.protocols.AltruisticProtocol
 
 //Oracle has an eye on everythinggi
 class Oracle {
@@ -18,6 +24,7 @@ class Oracle {
   val maxHops = Configuration.getInt("Oracle." + "MAX_HOPS")
   val peerAlgorithm = Configuration.getInt("Oracle." + "PEER_ALGORITHM")
   val fanout = Configuration.getInt("Oracle.FANOUT", BasicGossip.fanout)
+  val minWindow = Configuration.getInt("Oracle.MIN_WINDOW")
 
   val total = 1 until Network.size toList
   val frAmount = (Network.size * frPercentage).toInt
@@ -25,9 +32,26 @@ class Oracle {
   val altruistics = total diff freeRiders
   println(altruistics.size)
   println(freeRiders.size)
+  var kicked = Map[Int, Int]()
+  var badKicked = Map[Int, Int]()
   var maxHopInfo: Option[Info] = None
   var amountOfSentMessages: Int = 0
   var avgHops = MutableList[Int]()
+
+  var FRchallenges = 0
+  var altruisticChallanges = 0
+
+  def kick(id: Int) = kicked = kicked match {
+    case map if map.contains(id) =>
+      kicked.updated(id, kicked(id) + 1)
+    case _ => kicked.updated(id, 1)
+  }
+
+  def badKick(id: Int) = badKicked = badKicked match {
+    case map if map.contains(id) =>
+      badKicked.updated(id, badKicked(id) + 1)
+    case _ => badKicked.updated(id, 1)
+  }
 
   def saveMaxHopInfo(info: Info) {
     maxHopInfo match {
@@ -80,13 +104,37 @@ class Oracle {
     usernode.getProtocol(FastConfig.getLinkable(0)) match {
       case link: Link => link
     }
-  
-    def getLinkable(nid: Int): Link = getLinkable(getNode(nid))
+
+  def getLinkable(nid: Int): Link = getLinkable(getNode(nid))
 
   def getNode(id: Int): Usernode = {
     Network.get(id) match {
       case un: Usernode => un
     }
+  }
+
+  def addAltruisticNode = {
+
+    val node = new Usernode("basicGossip.node.Usernode")
+
+    Network.add(node)
+    node.setProtocol(0, new AltruisticProtocol("ltruistic Protocol"))
+    nodesHpvProtocol(node.getID.toInt)._2.setMyNode(Network.get(node.getID.toInt))
+    val streamerHpv = Oracle.nodeHpvProtocol(0)
+    streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
+    val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
+    node.initializeScoreList(prot.toSeq map (x => x.getID))
+    prot map {
+      x =>
+        val unLink = Oracle.getLinkable(node)
+        unLink.addNeighbor(Network.get(0))
+        unLink.addNeighbor(x)
+        Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
+        x match {
+          case a : Usernode => a.addToScoreList(node.getID)
+        }
+    }
+
   }
 
 }

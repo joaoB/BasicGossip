@@ -1,10 +1,11 @@
 # network size
-SIZE 5000
-HyParViewJoinTest.ACTIVE_VIEW_SIZE = 10
-Oracle.FANOUT 8
+SIZE 1000
+HyParViewJoinTest.ACTIVE_VIEW_SIZE = 8
+Oracle.FANOUT 6
+Oracle.MIN_WINDOW 4
 
 # parameters of periodic execution
-CYCLES 100
+CYCLES 1000
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -41,12 +42,19 @@ protocol.tr UnreliableTransport
 protocol.tr.transport urt
 protocol.tr.drop DROP
 
+protocol.searchN basicGossip.protocols.SearchNewNeighbor
+protocol.searchN.step CYCLE
+
+protocol.solveChallenge basicGossip.protocols.ChallengeSolver
+protocol.solveChallenge.step CYCLE
+protocol.solveChallenge.transport tr
+
 network.node basicGossip.node.Usernode
 
 ################### initialization ======================
 
 Oracle.FR_PERCENTAGE 0.2
-Oracle.MAX_HOPS 12
+Oracle.MAX_HOPS 25
 
 #0 - do NOT send to freeriders
 #1 - send to random 
@@ -67,9 +75,8 @@ init.vals ProtocolInitializer
 init.vals.PROTOCOL_ID 1
 
 init.sch CDScheduler
-init.sch.protocol avg
-#init.sch.randstart
-
+init.sch.protocol avg searchN solveChallenge
+#init.sch.protocol avg
 
 ################ control ==============================
 
@@ -89,3 +96,4 @@ control.2.FINAL 1
 control.3 basicGossip.observers.AvgReliability
 control.3.step 99999999999999999
 control.3.FINAL 1
+

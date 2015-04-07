@@ -47,14 +47,7 @@ class TestingObserver(name: String) extends BasicGossipObserver(name) {
     }
   }
   
-    private def dumpFreeRiders = {
-    for (i <- 1 until Network.size) {
-      Network.get(i) match {
-        case us: Usernode =>
-          us.dumpFreeRiders
-      }
-    }
-  }
+
 
   private def test2 = {
     //the node with less % is also the node with less connections?

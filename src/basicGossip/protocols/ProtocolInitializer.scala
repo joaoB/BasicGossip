@@ -1,19 +1,14 @@
 package basicGossip.protocols
 
-import peersim.core.Control
-import peersim.dynamics.NodeInitializer
-import peersim.core.Node
-import peersim.core.Network
-import peersim.config.Configuration
-import hyparview.HyParViewJoinTest
-import peersim.core.Linkable
-import peersim.core.IdleProtocol
-import peersim.config.FastConfig
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
-import scala.util.Random
-import utils.Organize
-import hyparview.SimpleJoin
+import hyparview.HyParViewJoinTest
+import peersim.config.Configuration
+import peersim.core.Control
+import peersim.core.IdleProtocol
+import peersim.core.Network
+import peersim.core.Node
+import peersim.dynamics.NodeInitializer
 
 class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 

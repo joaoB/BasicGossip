@@ -150,7 +150,8 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			int protocolID) {
 		boolean status = this.myNode.isUp();
 		if (status) {
-			if (ttl <= 0 || this.activeDegree <= 1 || this.neighbors().length < 4) {
+			if (ttl <= 0 || this.activeDegree <= 1
+					|| this.neighbors().length < 4) {
 				if (this.canAddNeighbour2ActiveMembership(newMember)) {
 					if (((HyParViewJoinTest) newMember
 							.getProtocol(HyParViewJoinTest.protocolID))
@@ -175,9 +176,11 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 	}
 
 	public boolean simpleJoinConnect(Node peer) {
-		Boolean status = null;
-		if (this.myNode.isUp()) {
-			status = new Boolean(this.simpleActiveMembershipAddNeighbour(peer));
+		Boolean status = false;
+		if (this.myNode.isUp()
+				&& ((HyParViewJoinTest) peer.getProtocol(protocolID))
+						.neighbors().length < HyParViewJoinTest.activeViewSize) {
+			status = this.simpleActiveMembershipAddNeighbour(peer);
 		}
 
 		return status;
@@ -433,10 +436,13 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 	private boolean simpleActiveMembershipAddNeighbour(Node neighbour) {
 		boolean sucess = false;
-		Node[] a = this.activeMembership;
-		this.activeMembership = new Node[this.activeMembership.length * 2];
-		System.arraycopy(a, 0, this.activeMembership, 0, a.length);
+
+		// Node[] a = this.activeMembership;
+		// this.activeMembership = new Node[this.activeMembership.length + 1];
+		// System.arraycopy(a, 0, this.activeMembership, 0, a.length);
+
 		for (int i = 0; !sucess; i++) {
+			if (i == this.activeMembership.length) return false;
 			if (this.activeMembership[i] == null) {
 				this.activeMembership[i] = neighbour;
 				this.activeDegree++;
