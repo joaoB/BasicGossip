@@ -41,34 +41,30 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   //  }
 
   override def nextCycle(node: Node, pid: Int): Unit = {
-
-    if (info == 550) {
-      Oracle.addAltruisticNode
-    }
-
+    //if (info % 50 == 0) println("generating new info " + info)
+    Oracle.updateCurrentPackage
     sendInfo(Oracle.getNode(0), newInfo, pid)
   }
 
   private def sendInfo(streamer: Usernode, info: Info, pid: Int) = {
     val link = Oracle.getLinkable(streamer)
-    // println("sending")
+    val trans = streamer.getProtocol(FastConfig.getTransport(pid))
+    
+
+    trans match {
+      case t: Transport =>        
+        DistinctRandom.sample(1 until link.degree toList, fanout) map {
+          id =>
+            link.getNeighbor(id) match {
+              case peern if peern.isUp =>
+                t.send(streamer, peern, info, pid)
+              case peern if !peern.isUp => None
+            }
+        }
+    }
+
     if (link.degree > 0) {
-      DistinctRandom.sample(0 until link.degree toList, fanout) map {
-        id =>
-          link.getNeighbor(id) match {
-            case peern if peern.isUp =>
-              streamer.getProtocol(FastConfig.getTransport(pid)) match {
-                case trans: Transport =>
-                  //println("sending to " + peern.getID)
-//                  if (info.value == 520) {
-//                    trans.send(streamer, Oracle.getNode(1000), info, pid)
-//                  }
-                  trans.send(streamer, peern, info, pid)
-                case _ => None
-              }
-            case peern if !peern.isUp => None
-          }
-      }
+
     } else {
       println("Could not send. Is degree > 0 ?")
     }
@@ -82,7 +78,6 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   }
 
   def processEvent(node: Node, pid: Int, event: Object) {
-    //for now, no 1 should send messages to streamer
   }
 
 }

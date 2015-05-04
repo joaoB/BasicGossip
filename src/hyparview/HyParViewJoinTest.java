@@ -1,6 +1,7 @@
 package hyparview;
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import peersim.cdsim.CDProtocol;
@@ -138,8 +139,20 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 	public void simpleJoin(Node newMember, int protocolID) {
 		ArrayList<Node> peersSelected = new ArrayList<Node>();
 		this.peerIterator.reset(this.activeDegree);
-		peersSelected.add(this.activeMembership[this.peerIterator.next()]);
 
+		try {
+			peersSelected.add(this.activeMembership[this.peerIterator.next()]);
+		} catch (NoSuchElementException e) {
+
+			try {
+				peersSelected.add(this.passiveMembership[this.peerIterator
+						.next()]);
+
+			} catch (NoSuchElementException ex) {
+				peersSelected.add(Network.get(0));
+			}
+
+		}
 		((HyParViewJoinTest) peersSelected.remove(0).getProtocol(protocolID))
 				.simpleRandomWalk(newMember, HyParViewJoinTest.randomLenght,
 						myNode, protocolID);
@@ -150,8 +163,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			int protocolID) {
 		boolean status = this.myNode.isUp();
 		if (status) {
-			if (ttl <= 0 || this.activeDegree <= 1
-					|| this.neighbors().length < 4) {
+			if (ttl <= 0 || this.activeDegree <= 1) {
 				if (this.canAddNeighbour2ActiveMembership(newMember)) {
 					if (((HyParViewJoinTest) newMember
 							.getProtocol(HyParViewJoinTest.protocolID))
@@ -177,9 +189,10 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 	public boolean simpleJoinConnect(Node peer) {
 		Boolean status = false;
+
 		if (this.myNode.isUp()
 				&& ((HyParViewJoinTest) peer.getProtocol(protocolID))
-						.neighbors().length < HyParViewJoinTest.activeViewSize) {
+						.neighbors().length < ((HyParViewJoinTest) peer.getProtocol(protocolID)).activeMembership.length && this.neighbors().length < this.activeMembership.length ) {
 			status = this.simpleActiveMembershipAddNeighbour(peer);
 		}
 
@@ -442,7 +455,8 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 		// System.arraycopy(a, 0, this.activeMembership, 0, a.length);
 
 		for (int i = 0; !sucess; i++) {
-			if (i == this.activeMembership.length) return false;
+			if (i == this.activeMembership.length)
+				return false;
 			if (this.activeMembership[i] == null) {
 				this.activeMembership[i] = neighbour;
 				this.activeDegree++;
@@ -782,7 +796,10 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			return HyParViewJoinTest.passiveViewSize;
 	}
 
-	public void setMyNode(Node me) {
+	public void setMyNode(Node me, int activeViewSize) {
+		Node[] a = new Node[activeViewSize];
+		System.arraycopy(activeMembership, 0, a, 0, activeMembership.length);
+		activeMembership = a;
 		this.myNode = me;
 	}
 

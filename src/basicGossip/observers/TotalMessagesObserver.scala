@@ -13,12 +13,14 @@ class TotalMessagesObserver(name: String) extends BasicGossipObserver(name) {
   }
 
   def dumpTotalMessages = {
-    println("Amounf of messages: " + Oracle.amountOfSentMessages)
+    println("Amounf of messages: " + Oracle.altruisticsAmountOfSentMessages + Oracle.frAmountOfSentMessages)
   }
   
   def avgAltruisticMessage = {
     val altruistics = (1 - Oracle.frPercentage) * Network.size
-    println("Avg Altruistic Message #: " + Oracle.amountOfSentMessages / altruistics )
+    println("Avg Altruistic Message #: " + Oracle.altruisticsAmountOfSentMessages / altruistics )
+    
+    println("Avg FR Message #: " + Oracle.frAmountOfSentMessages / Oracle.frAmount )
     
   }
 }

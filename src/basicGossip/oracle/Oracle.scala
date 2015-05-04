@@ -30,46 +30,52 @@ class Oracle {
   val frAmount = (Network.size * frPercentage).toInt
   val freeRiders = Random.shuffle(total).take(frAmount)
   val altruistics = total diff freeRiders
-  println(altruistics.size)
-  println(freeRiders.size)
   var kicked = Map[Int, Int]()
   var badKicked = Map[Int, Int]()
   var maxHopInfo: Option[Info] = None
-  var amountOfSentMessages: Int = 0
+  var altruisticsAmountOfSentMessages: Int = 0
+  var frAmountOfSentMessages: Int = 0
   var avgHops = MutableList[Int]()
 
   var FRchallenges = 0
   var altruisticChallanges = 0
+  var currentPackage = 0
 
-  def kick(id: Int) = kicked = kicked match {
-    case map if map.contains(id) =>
-      kicked.updated(id, kicked(id) + 1)
-    case _ => kicked.updated(id, 1)
-  }
+  def updateCurrentPackage = currentPackage += 1
 
-  def badKick(id: Int) = badKicked = badKicked match {
-    case map if map.contains(id) =>
-      badKicked.updated(id, badKicked(id) + 1)
-    case _ => badKicked.updated(id, 1)
-  }
-
-  def saveMaxHopInfo(info: Info) {
-    maxHopInfo match {
-      case Some(elem) if info.hop > elem.hop => updateMaxHopInfo(info)
-      case None => updateMaxHopInfo(info)
-      case _ =>
+  def kick(id: Int) = {
+    kicked = kicked match {
+      case map if map.contains(id) =>
+        kicked.updated(id, kicked(id) + 1)
+      case _ => kicked.updated(id, 1)
     }
   }
 
-  def incSentMessages = amountOfSentMessages += 1
+  def badKick(id: Int) =
+    badKicked = badKicked match {
+      case map if map.contains(id) =>
+        badKicked.updated(id, badKicked(id) + 1)
+      case _ => badKicked.updated(id, 1)
+    }
 
-  private def updateMaxHopInfo(info: Info) {
+  def saveMaxHopInfo(info: Info) =
+    maxHopInfo match {
+      case Some(elem) if info.hop > elem.hop => updateMaxHopInfo(info)
+      case None => //updateMaxHopInfo(info)
+    }
+
+  def incSentMessages(un: Usernode) =
+    if (!Oracle.freeRiders.contains(un.getID)) {
+      altruisticsAmountOfSentMessages += 1
+    } else {
+      frAmountOfSentMessages += 1
+    }
+
+  private def updateMaxHopInfo(info: Info) =
     maxHopInfo = Some(info)
-  }
 
-  def saveHop(info: Info) = {
+  def saveHop(info: Info) =
     avgHops.+=(info.hop)
-  }
 
   private def allNodesAux(start: Int): List[Usernode] =
     (for (i <- start until Network.size) yield Network.get(i)).map {
@@ -96,9 +102,14 @@ class Oracle {
     } toList
   }
 
-  def nodeHpvProtocol(id: Int): (Usernode, HyParViewJoinTest) = {
-    nodesHpvProtocol(List(getNode(id))).head
+  def nodesHpvProtocols(nodes: List[Int]): List[(Usernode, HyParViewJoinTest)] = {
+    nodesHpvProtocol(nodes map {
+      node => Oracle.getNode(node)
+    })
   }
+
+  def nodeHpvProtocol(id: Int): (Usernode, HyParViewJoinTest) =
+    nodesHpvProtocol(List(getNode(id))).head
 
   def getLinkable(usernode: Usernode): Link =
     usernode.getProtocol(FastConfig.getLinkable(0)) match {
@@ -114,12 +125,10 @@ class Oracle {
   }
 
   def addAltruisticNode = {
-
     val node = new Usernode("basicGossip.node.Usernode")
-
     Network.add(node)
-    node.setProtocol(0, new AltruisticProtocol("ltruistic Protocol"))
-    nodesHpvProtocol(node.getID.toInt)._2.setMyNode(Network.get(node.getID.toInt))
+    node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+    nodesHpvProtocol(node.getID.toInt)._2.setMyNode(Network.get(node.getID.toInt), getViewSize(node))
     val streamerHpv = Oracle.nodeHpvProtocol(0)
     streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
     val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
@@ -131,10 +140,18 @@ class Oracle {
         unLink.addNeighbor(x)
         Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
         x match {
-          case a : Usernode => a.addToScoreList(node.getID)
+          case a: Usernode => a.addToScoreList(node.getID)
         }
     }
 
+  }
+
+  def getViewSize(un: Usernode) = {
+    if (Oracle.freeRiders contains un.getID.toInt) {
+      100
+    } else {
+      HyParViewJoinTest.activeViewSize
+    }
   }
 
 }

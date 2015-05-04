@@ -18,7 +18,7 @@ class PercentagesObserver(name: String) extends BasicGossipObserver(name) {
 
   def dumpMinAndMaxPercentages = {
     val percentages = Oracle.allNodesExceptStreamer map {
-      node => (node.messageList filter (_.isDefined)).size.toFloat / BasicGossip.cycles
+      node => node.messageList.size.toFloat / BasicGossip.cycles
     }
     println("Min percentage: " + percentages.min)
     println("Max percentage: " + percentages.max)

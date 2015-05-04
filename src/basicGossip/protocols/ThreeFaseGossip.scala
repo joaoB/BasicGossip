@@ -8,8 +8,13 @@ import peersim.core.Node
 import peersim.transport.Transport
 import peersim.config.FastConfig
 import basicGossip.oracle.Oracle
+import scala.util.Random
 
 class ThreeFaseGossip(name: String) extends GeneralProtocol {
+
+  override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
+    Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size < Oracle.minWindow && un.solvingChallenges.size == 0
+  }
 
   override def processEvent(node: Node, pid: Int, event: Object) = {
     event match {
@@ -20,12 +25,31 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     }
   }
 
+  override def gossipMessage(gossiper: Usernode, sender: Node): Set[Long] =
+    Oracle.peerAlgorithm match {
+      case 0 =>
+        val probability = Random.nextFloat
+        gossiper.scoreList.filter(x => x._1 != 0 && x._1 != sender.getID && x._2 > probability).keySet
+      case 1 =>
+        gossiper.scoreList.filter(x => x._1 != 0).keySet
+    }
+
+  override def initializeScoreList(un: Usernode, ids: Seq[Long]) = {
+    un.scoreList = Map(ids map {
+      id => id -> 1F
+    }: _*)
+  }
+
+  override def addToScoreList(un: Usernode, nid: Long) {
+    un.scoreList = un.scoreList.updated(nid, 0.5F)
+  }
+
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
-    if (!saveInfo(node, info)) {
+    if (saveInfo(node, info)) {
       val linkable = Oracle.getLinkable(node)
       val proposedIds = generateProposeIds(node);
 
-      node.randomGossip(Oracle.fanout, info.sender) map {
+      gossipMessage(node, info.sender) map {
         id =>
           if (linkable.degree() > 0) {
             val peern = linkable.getNeighborById(id) match {
@@ -44,8 +68,12 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     }
   }
 
+  override def canAcceptNewNeighbor(un: Usernode) = Oracle.getLinkable(un).neigh.size < Oracle.fanout
+
   private def generateProposeIds(node: Usernode): List[Int] = {
-    node.messageList.toList.filter(_.isDefined).map(_.get.value).takeRight(1)
+    //  node.messageList.toList.filter(_.isDefined).map(_.get.value).takeRight(1)
+    node.messageList.toList.takeRight(1)
+
   }
 
   def processPropose(node: Usernode, pid: Int, propose: Propose) = {
@@ -57,7 +85,9 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
 
   def generateRequest(un: Usernode, propose: Propose): List[Int] = {
     //compute the ids that un wants
-    val messagesIds = un.messageList.toList.filter(_.isDefined).map(_.get.value).takeRight(1)
+    // val messagesIds = un.messageList.toList.filter(_.isDefined).map(_.get.value).takeRight(1)
+    val messagesIds = un.messageList.toList.takeRight(1)
+
     propose.ids.diff(messagesIds)
 
   }
@@ -66,9 +96,9 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     //some node has this request
     request.ids map {
       id =>
-        node.messageList(id) match {
-          case Some(info) => serveRequest(node, request.sender, info, pid)
-          case None => println("some guy requested something that he was not proposed") //some guy requested something that he was not proposed
+        node.messageList.contains(id) match {
+          case /*Some(info)*/ true => serveRequest(node, request.sender, Info(id, request.sender, 0), pid)
+          case _ => println("some guy requested something that he was not proposed") //some guy requested something that he was not proposed
         }
     }
 
@@ -102,11 +132,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
       case link: Link =>
         val peern = link.getNeighborById(receiver.getID) match {
           case Some(peern) if peern.isUp =>
-            sender.getProtocol(FastConfig.getTransport(pid)) match {
-              case trans: Transport =>
-                sendInfo(trans, sender, peern, Info(info.value, sender, info.hop + 1), pid)
-              case _ => ???
-            }
+            sendInfo(sender, peern, Info(info.value, sender, info.hop + 1), pid)
           case _ =>
         }
 

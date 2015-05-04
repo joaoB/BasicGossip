@@ -42,15 +42,16 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   }
 
   def initializeFreeRider(node: Usernode) {
-    node.setProtocol(0, new FRProtocol("Free Rider Protocol"))
+    node.setProtocol(0, new RationalProtocol("Free Rider Protocol"))
   }
 
   def initialize(node: Node) = {}
 
+
   def initializeViews = {
     //hyparview initialization
     Oracle.nodesHpvProtocol map {
-      case (un: Usernode, prot: HyParViewJoinTest) => prot.setMyNode(Network.get(un.getID.toInt))
+      case (un: Usernode, prot: HyParViewJoinTest) => prot.setMyNode(Network.get(un.getID.toInt), Oracle.getViewSize(un))
     }
 
     val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
@@ -63,7 +64,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     globalHyParViewLinkage
     //traditionalHyParViewLinkage
 
-/*    Oracle.nodeHpvProtocol(Oracle.getLinkable(2).getNeighbors.head.getID.toInt)._2.simpleJoin(Oracle.getNode(2), HyParViewJoinTest.protocolID)
+    /*    Oracle.nodeHpvProtocol(Oracle.getLinkable(2).getNeighbors.head.getID.toInt)._2.simpleJoin(Oracle.getNode(2), HyParViewJoinTest.protocolID)
 
     Oracle.allNodesExceptStreamer map {
       elem => Oracle.nodeHpvProtocol(Oracle.getLinkable(elem.getID.toInt).getNeighbors.head.getID.toInt)._2.simpleJoin(Oracle.getNode(elem.getID.toInt), HyParViewJoinTest.protocolID)
@@ -86,7 +87,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
       val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.fanout / 2) map {
         a => streamerHpv._2.join(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
       }
-      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.fanout / 2  )
+      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.minWindow)
     }
     while (rejoinIsolatedAux) {}
   }

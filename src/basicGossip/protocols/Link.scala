@@ -51,6 +51,4 @@ class Link(prefix: String) extends IdleProtocol(prefix) {
 
   override def getNeighbor(nid: Int): Node = neigh.find(_.getID == nid).getOrElse(Network.get(0))
 
-  //override def clone {}
-
 }

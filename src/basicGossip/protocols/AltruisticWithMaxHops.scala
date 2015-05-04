@@ -12,7 +12,7 @@ class AltruisticWithMaxHops(name: String) extends AltruisticProtocol(name) {
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     saveInfo(node, info)
     val linkable = node.getProtocol(FastConfig.getLinkable(pid))
-    node.randomGossip(Oracle.fanout, info.sender) map {
+    gossipMessage(node, info.sender) map {
       id =>
         linkable match {
           case link: Link =>
@@ -21,7 +21,7 @@ class AltruisticWithMaxHops(name: String) extends AltruisticProtocol(name) {
                 case Some(peern) if peern.isUp =>
                   node.getProtocol(FastConfig.getTransport(pid)) match {
                     case trans: Transport if info.hop < maxHops =>
-                      sendInfo(trans, node, peern, Info(info.value, node, info.hop + 1), pid)
+                      sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
                     case _ => //do nothing
                   }
                 case _ => sendToRandom(node, Info(info.value, node, info.hop + 1), pid)

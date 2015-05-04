@@ -1,8 +1,11 @@
 # network size
 SIZE 1000
 HyParViewJoinTest.ACTIVE_VIEW_SIZE = 8
-Oracle.FANOUT 6
-Oracle.MIN_WINDOW 4
+Oracle.FANOUT 7
+Oracle.MIN_WINDOW 3
+Usernode.SCORE_DELTA 0.03
+Usernode.FR_THRESHOLD 0.0
+Oracle.FR_PERCENTAGE 0.2
 
 # parameters of periodic execution
 CYCLES 1000
@@ -53,8 +56,8 @@ network.node basicGossip.node.Usernode
 
 ################### initialization ======================
 
-Oracle.FR_PERCENTAGE 0.2
-Oracle.MAX_HOPS 25
+
+Oracle.MAX_HOPS 30
 
 #0 - do NOT send to freeriders
 #1 - send to random 
@@ -80,20 +83,20 @@ init.sch.protocol avg searchN solveChallenge
 
 ################ control ==============================
 
-control.0 basicGossip.observers.MaxHopsObserver
+#control.0 basicGossip.observers.MaxHopsObserver
 #control.0.step CYCLE
-control.0.step 99999999999999999
-control.0.FINAL 1	
+#control.0.step 99999999999999999
+#control.0.FINAL 1	
 
-control.1 basicGossip.observers.TotalMessagesObserver
-control.1.step 99999999999999999
-control.1.FINAL 1
+#control.1 basicGossip.observers.TotalMessagesObserver
+#control.1.step 99999999999999999
+#control.1.FINAL 1
 
-control.2 basicGossip.observers.PercentagesObserver
-control.2.step 99999999999999999
-control.2.FINAL 1
+#control.2 basicGossip.observers.PercentagesObserver
+#control.2.step 99999999999999999
+#control.2.FINAL 1
 
 control.3 basicGossip.observers.AvgReliability
-control.3.step 99999999999999999
+control.3.step CYCLE * 500
 control.3.FINAL 1
 
