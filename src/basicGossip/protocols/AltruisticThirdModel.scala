@@ -12,7 +12,7 @@ class AltruisticThirdModel(name: String) extends AltruisticProtocol(name) {
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (saveInfo(node, info)) {
       val linkable = node.getProtocol(FastConfig.getLinkable(pid))
-      gossipMessage(node, info.sender) map {
+      computeFanout(node, info.sender) map {
         id =>
           linkable match {
             case link: Link =>

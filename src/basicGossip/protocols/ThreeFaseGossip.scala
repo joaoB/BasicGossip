@@ -25,7 +25,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
     }
   }
 
-  override def gossipMessage(gossiper: Usernode, sender: Node): Set[Long] =
+  override def computeFanout(gossiper: Usernode, sender: Node): Set[Long] =
     Oracle.peerAlgorithm match {
       case 0 =>
         val probability = Random.nextFloat

@@ -19,7 +19,7 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
 
   def shouldLookForNewNeighbor(un: Usernode): Boolean;
 
-  def gossipMessage(gossiper: Usernode, sender: Node): Set[Long];
+  def computeFanout(gossiper: Usernode, sender: Node): Set[Long];
 
   def initializeScoreList(un: Usernode, ids: Seq[Long]);
 
@@ -48,7 +48,7 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
   def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (saveInfo(node, info)) {
       val linkable = Oracle.getLinkable(node)
-      gossipMessage(node, info.sender) map {
+      computeFanout(node, info.sender) map {
         id =>
           linkable.getNeighborById(id) match {
             case Some(peern) if peern.isUp =>
