@@ -49,7 +49,7 @@ class ThreeFaseGossip(name: String) extends GeneralProtocol {
       val linkable = Oracle.getLinkable(node)
       val proposedIds = generateProposeIds(node);
 
-      gossipMessage(node, info.sender) map {
+      computeFanout(node, info.sender) map {
         id =>
           if (linkable.degree() > 0) {
             val peern = linkable.getNeighborById(id) match {
