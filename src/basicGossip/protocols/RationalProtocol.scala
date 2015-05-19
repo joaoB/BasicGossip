@@ -17,15 +17,30 @@ class RationalProtocol(name: String) extends GeneralProtocol {
   }
 
   override def addToScoreList(un: Usernode, nid: Long) {
-    un.scoreList = un.scoreList.updated(nid, 0.0F)
+    un.scoreList = un.scoreList.updated(nid, Oracle.baseRank.toFloat)
   }
 
-  override def canAcceptNewNeighbor(un: Usernode) = true
+  override def canAcceptNewNeighbor(un: Usernode) = {
+    val max = 10
+    Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size < max &&
+      un.waitingConfirm.size + un.scoreList.size + un.solvingChallenges.size < max
+
+  }
 
   override def computeFanout(gossiper: Usernode, sender: Node): Set[Long] = {
-    gossiper.scoreList.filter(x => x._1 != 0 && x._2 > 1 - (gossiper.FR_THRESHOLD + 0.6)).keySet
+    val neighbors = gossiper.scoreList.filter(x => x._1 != 0 && x._1 != sender.getID) filter {
+      //     case (id, score) if score >= 13 => true
+      //   case _ => false
+
+      case (id, score) if score >= Oracle.baseRank => aboveBaseRank
+      case (id, score) if Oracle.baseRank > score && score >= Oracle.FR_THRESHOLD => belowBaseRank(score)
+      case (id, score) if score < Oracle.FR_THRESHOLD => false
+
+    }
+    //println(neighbors.keySet.size)
+    neighbors.keySet
   }
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
-    true
+    canAcceptNewNeighbor(un)
   }
 }

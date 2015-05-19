@@ -23,11 +23,13 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   var scoreList = Map[Long, Float]()
 
+  var newMessages = 0
+  var repeatedMessages = 0
+
   var waitingConfirm = MutableList[Int]()
   var solvingChallenges = MutableList[WaitCycles]()
 
   val scoreDelta = Configuration.getDouble("Usernode." + "SCORE_DELTA").toFloat
-  val FR_THRESHOLD = Configuration.getDouble("Usernode." + "FR_THRESHOLD").toFloat
 
   def behaviorProtocol: GeneralProtocol = this.getProtocol(0) match {
     case protocol: GeneralProtocol => protocol
@@ -35,7 +37,9 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def addChallenge(sender: Usernode) = {
     if (!solvingChallenges.exists { x => x.sender.getID == sender.getID }) {
-      solvingChallenges.+=(WaitCycles(20, sender))
+      
+      //println("Node : " + this.getID + " adding " + sender.getID)
+      solvingChallenges.+=(WaitCycles(Oracle.QUARANTINE, sender))
       true
     } else {
       false
@@ -44,7 +48,8 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def solveChallenge = {
     solvingChallenges = solvingChallenges map {
-      elem => elem.copy(remainingCycles = elem.remainingCycles - 1)
+      elem => 
+        elem.copy(remainingCycles = elem.remainingCycles - 1)
     }
   }
 
@@ -64,6 +69,8 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
       this.addToScoreList(newMember.getID)
     } else {
       Oracle.nodeHpvProtocol(this.getID.toInt)._2.disconnect(Network.get(newMember.getID.toInt))
+      Oracle.nodeHpvProtocol(newMember.getID.toInt)._2.disconnect(Network.get(this.getID.toInt))
+    
     }
     waitingConfirm = waitingConfirm.filterNot(_ == newMember.getID)
 
@@ -75,14 +82,18 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     behaviorProtocol.addToScoreList(this, nid)
   }
 
-  def increaseScore(node: Node) {
+  def increaseScore(node: Node, score: Float) {
     // used when we receive info from node
     val id = node.getID
     scoreList = scoreList match {
       case map if map.contains(id) =>
-        scoreList.updated(id, scoreList(id) + scoreDelta)
+        scoreList.updated(id, scoreList(id) + score)
       case _ => scoreList
     }
+  }
+
+  def increaseScore(node: Node) {
+    increaseScore(node, scoreDelta)
   }
 
   def decreaseScore(node: Node) {
@@ -119,7 +130,6 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   override def clone(): Object = {
     this.scoreList = Map[Long, Float]()
-    // this.messageList = Array.fill(BasicGossip.cycles)(None: Option[Info])
     this.messageList = BitSet()
     this.waitingConfirm = new MutableList[Int]()
     this.solvingChallenges = new MutableList[WaitCycles]()
@@ -131,7 +141,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   }
 
   def freeRiders = {
-    scoreList.filter(_._2 <= FR_THRESHOLD).map(_._1) toList
+    scoreList.filter(_._2 <= Oracle.FR_THRESHOLD).map(_._1) toList
   }
 
   def shouldLookForNewNeighbor: Boolean = {
@@ -139,8 +149,6 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   }
 
   def canAcceptNewNeighbor: Boolean = behaviorProtocol.canAcceptNewNeighbor(this)
-
-  def altruisticsNeighbors: List[Long] = scoreList.filter(_._2 > 0.5).map(_._1) toList
 
   def addWaitingConfirm(id: Int) =
     if (!waitingConfirm.contains(id)) waitingConfirm += id

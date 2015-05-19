@@ -27,6 +27,17 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
 
   def canAcceptNewNeighbor(un: Usernode): Boolean
 
+  def aboveBaseRank: Boolean = {
+    Oracle.forwardProbability > Random.nextFloat
+  }
+
+  def belowBaseRank(score: Float): Boolean = {
+    val calced = Oracle.forwardProbability * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
+    val random = Random.nextFloat
+    val a = calced > random
+    a
+  }
+
   def processEvent(node: Node, pid: Int, event: Object) = {
     event match {
       case info: Info => {
@@ -41,7 +52,10 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
       case usernode: Usernode if !usernode.containsElem(info.value) =>
         Oracle.saveMaxHopInfo(info)
         gossipMessage(usernode, info, pid)
-      case usernode: Usernode => usernode.increaseScore(info.sender)
+        info.sender.newMessages += 1
+      case usernode: Usernode =>
+        usernode.increaseScore(info.sender, 1)
+        info.sender.repeatedMessages += 1
     }
   }
 
@@ -52,7 +66,9 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
         id =>
           linkable.getNeighborById(id) match {
             case Some(peern) if peern.isUp =>
+              // if (!peern.messageList.contains(info.value)) {
               sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
+            //}
             case _ => print("node not up")
           }
       }
@@ -60,7 +76,7 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
   }
 
   def saveInfo(node: Usernode, info: Info): Boolean = {
-    node.increaseScore(info.sender)
+    node.increaseScore(info.sender, 1)
     node.saveMessage(info)
     true
   }

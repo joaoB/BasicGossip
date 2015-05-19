@@ -21,7 +21,6 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   val networkSize = (Configuration.getInt("network.size", 1))
   val cycles = (Configuration.getInt("CYCLES", 1))
-  val fanout = Math.log(networkSize).toInt
   var info: Int = 0
 
   //  def a = {
@@ -42,6 +41,13 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   override def nextCycle(node: Node, pid: Int): Unit = {
     //if (info % 50 == 0) println("generating new info " + info)
+//    if (info == 500) {
+//      for (a <- 0 until 1)
+//        Oracle.addAltruisticNode
+//      Oracle.getNode(1000).scoreList
+//      println("NEWWWWWWWWWWWWWWWWWWWWWWWWWW - > " + Oracle.getNode(1000).scoreList)
+//    }
+
     Oracle.updateCurrentPackage
     sendInfo(Oracle.getNode(0), newInfo, pid)
   }
@@ -49,11 +55,11 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   private def sendInfo(streamer: Usernode, info: Info, pid: Int) = {
     val link = Oracle.getLinkable(streamer)
     val trans = streamer.getProtocol(FastConfig.getTransport(pid))
-    
 
     trans match {
-      case t: Transport =>        
-        DistinctRandom.sample(1 until link.degree toList, fanout) map {
+      case t: Transport =>
+        DistinctRandom.sample(1 until Network.size toList, Oracle.fanout) map {
+          //Random.shuffle(Oracle.altruistics).take(fanout) map {  
           id =>
             link.getNeighbor(id) match {
               case peern if peern.isUp =>

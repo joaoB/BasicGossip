@@ -175,8 +175,14 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			} else {
 				Node destino = null;
 				this.peerIterator.reset(this.activeDegree);
-				while (destino == null || destino.equals(originator))
-					destino = this.activeMembership[this.peerIterator.next()];
+				while (destino == null || destino.equals(originator)) {
+					try {
+						destino = this.activeMembership[this.peerIterator
+								.next()];
+					} catch (Exception ex) {
+						return false;
+					}
+				}
 
 				((HyParViewJoinTest) destino.getProtocol(protocolID))
 						.simpleRandomWalk(newMember, ttl - 1, this.myNode,
@@ -192,7 +198,9 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 		if (this.myNode.isUp()
 				&& ((HyParViewJoinTest) peer.getProtocol(protocolID))
-						.neighbors().length < ((HyParViewJoinTest) peer.getProtocol(protocolID)).activeMembership.length && this.neighbors().length < this.activeMembership.length ) {
+						.neighbors().length < ((HyParViewJoinTest) peer
+						.getProtocol(protocolID)).activeMembership.length
+				&& this.neighbors().length < this.activeMembership.length) {
 			status = this.simpleActiveMembershipAddNeighbour(peer);
 		}
 
@@ -397,7 +405,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			// this.jstat.disconnected();
 		} else {
 			// System.err
-			// .println("Warning: Received a disconnect notification from someone i am not neighbour");
+			 //.println("Warning: Received a disconnect notification from someone i am not neighbour");
 		}
 	}
 

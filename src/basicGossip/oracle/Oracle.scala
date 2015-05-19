@@ -20,19 +20,27 @@ import basicGossip.protocols.AltruisticProtocol
 //Oracle has an eye on everythinggi
 class Oracle {
 
-  val frPercentage = Configuration.getDouble("Oracle." + "FR_PERCENTAGE")
-  val maxHops = Configuration.getInt("Oracle." + "MAX_HOPS")
+  val frPercentage = Configuration.getDouble("Oracle.FR_PERCENTAGE")
+  val maxHops = Configuration.getInt("Oracle.MAX_HOPS")
   val peerAlgorithm = Configuration.getInt("Oracle." + "PEER_ALGORITHM")
-  val fanout = Configuration.getInt("Oracle.FANOUT", BasicGossip.fanout)
+  val fanout = Configuration.getInt("Oracle.FANOUT")
   val minWindow = Configuration.getInt("Oracle.MIN_WINDOW")
+  val redundancyFactor = Configuration.getDouble("Oracle.REDUNDANCY_FACTOR")
+  val baseRank = Configuration.getDouble("Oracle.INITIALIZE_SCORE")
+  val forwardProbability = Configuration.getDouble("Oracle.FORWARD_PROBABILITY")
+  val FR_THRESHOLD = Configuration.getInt("Oracle.FR_THRESHOLD")
+  val MIN_WIN_TO_SEARCH = Configuration.getInt("Oracle.MIN_WINDOW_TO_SEARCH")
+  val QUARANTINE = Configuration.getInt("Oracle.QUARANTINE")
 
+  val RACIONAL_MAX_CONNECTIONS = Configuration.getInt("Oracle.RACIONAL_MAX_CONNECTIONS")
+  
   val total = 1 until Network.size toList
   val frAmount = (Network.size * frPercentage).toInt
   val freeRiders = Random.shuffle(total).take(frAmount)
   val altruistics = total diff freeRiders
   var kicked = Map[Int, Int]()
   var badKicked = Map[Int, Int]()
-  var maxHopInfo: Option[Info] = None
+  var maxHopInfo = 0
   var altruisticsAmountOfSentMessages: Int = 0
   var frAmountOfSentMessages: Int = 0
   var avgHops = MutableList[Int]()
@@ -60,8 +68,8 @@ class Oracle {
 
   def saveMaxHopInfo(info: Info) =
     maxHopInfo match {
-      case Some(elem) if info.hop > elem.hop => updateMaxHopInfo(info)
-      case None => //updateMaxHopInfo(info)
+      case elem if info.hop >= elem => updateMaxHopInfo(info)
+      case _ => //updateMaxHopInfo(info)
     }
 
   def incSentMessages(un: Usernode) =
@@ -72,7 +80,7 @@ class Oracle {
     }
 
   private def updateMaxHopInfo(info: Info) =
-    maxHopInfo = Some(info)
+    maxHopInfo = info.value
 
   def saveHop(info: Info) =
     avgHops.+=(info.hop)
@@ -125,30 +133,42 @@ class Oracle {
   }
 
   def addAltruisticNode = {
-    val node = new Usernode("basicGossip.node.Usernode")
-    Network.add(node)
-    node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
-    nodesHpvProtocol(node.getID.toInt)._2.setMyNode(Network.get(node.getID.toInt), getViewSize(node))
-    val streamerHpv = Oracle.nodeHpvProtocol(0)
-    streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
-    val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
-    node.initializeScoreList(prot.toSeq map (x => x.getID))
-    prot map {
-      x =>
-        val unLink = Oracle.getLinkable(node)
-        unLink.addNeighbor(Network.get(0))
-        unLink.addNeighbor(x)
-        Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
-        x match {
-          case a: Usernode => a.addToScoreList(node.getID)
+    Oracle.getNode(Oracle.altruistics.head).clone match {
+      case node: Usernode =>
+        Network.add(node)
+        node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+        nodesHpvProtocol(node.getID.toInt)._2.setMyNode(Network.get(node.getID.toInt), getViewSize(node))
+        val streamerHpv = Oracle.nodeHpvProtocol(0)
+
+        for (a <- 0 until HyParViewJoinTest.activeViewSize) {
+          streamerHpv._2.simpleJoin(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
         }
+
+        val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
+        node.initializeScoreList(prot.toSeq map (x => x.getID))
+        prot map {
+          x =>
+            val unLink = Oracle.getLinkable(node)
+            //unLink.addNeighbor(Network.get(0))
+            unLink.addNeighbor(x)
+            node.addChallenge(Oracle.getNode(x.getID.toInt))
+            Oracle.getNode(x.getID.toInt).addWaitingConfirm(node.getID.toInt)
+
+            println(node)
+
+            Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
+            x match {
+              case a: Usernode => a.addToScoreList(node.getID)
+            }
+        }
+
     }
 
   }
 
   def getViewSize(un: Usernode) = {
     if (Oracle.freeRiders contains un.getID.toInt) {
-      100
+      RACIONAL_MAX_CONNECTIONS
     } else {
       HyParViewJoinTest.activeViewSize
     }

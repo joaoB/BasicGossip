@@ -15,7 +15,8 @@ class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
     val un = Oracle.getNode(node.getID.toInt)
     un.solveChallenge
     un.solvingChallenges.filter(_.remainingCycles == 0) map {
-      elem => sendSimpleMessage(un, elem.sender, ConfirmSolveChallenge(un), pid)
+      elem => 
+        elem.sender.receivedSolvedChallenge(un)
     }
     un.cleanSolvedChallenges
   }

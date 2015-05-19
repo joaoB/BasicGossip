@@ -1,14 +1,21 @@
 # network size
 SIZE 1000
-HyParViewJoinTest.ACTIVE_VIEW_SIZE = 8
-Oracle.FANOUT 7
+HyParViewJoinTest.ACTIVE_VIEW_SIZE = 12
+Oracle.FANOUT 8
 Oracle.MIN_WINDOW 3
-Usernode.SCORE_DELTA 0.03
-Usernode.FR_THRESHOLD 0.0
-Oracle.FR_PERCENTAGE 0.2
+Oracle.MIN_WINDOW_TO_SEARCH 5
+Usernode.SCORE_DELTA 1
+Oracle.FR_THRESHOLD -15
+Oracle.FR_PERCENTAGE 0.3
+Oracle.QUARANTINE 105
+Oracle.RACIONAL_MAX_CONNECTIONS 12
 
+Oracle.FORWARD_PROBABILITY 0.7
+Oracle.REDUNDANCY_FACTOR 0
+Oracle.INITIALIZE_SCORE 0
 # parameters of periodic execution
-CYCLES 1000
+
+CYCLES 3000
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -45,12 +52,12 @@ protocol.tr UnreliableTransport
 protocol.tr.transport urt
 protocol.tr.drop DROP
 
-protocol.searchN basicGossip.protocols.SearchNewNeighbor
-protocol.searchN.step CYCLE
-
 protocol.solveChallenge basicGossip.protocols.ChallengeSolver
 protocol.solveChallenge.step CYCLE
 protocol.solveChallenge.transport tr
+
+protocol.searchN basicGossip.protocols.SearchNewNeighbor
+protocol.searchN.step CYCLE
 
 network.node basicGossip.node.Usernode
 
@@ -83,11 +90,6 @@ init.sch.protocol avg searchN solveChallenge
 
 ################ control ==============================
 
-#control.0 basicGossip.observers.MaxHopsObserver
-#control.0.step CYCLE
-#control.0.step 99999999999999999
-#control.0.FINAL 1	
-
 #control.1 basicGossip.observers.TotalMessagesObserver
 #control.1.step 99999999999999999
 #control.1.FINAL 1
@@ -97,6 +99,10 @@ init.sch.protocol avg searchN solveChallenge
 #control.2.FINAL 1
 
 control.3 basicGossip.observers.AvgReliability
-control.3.step CYCLE * 500
+control.3.step CYCLE * 10000
 control.3.FINAL 1
 
+
+control.4 basicGossip.observers.Test
+control.4.step CYCLE * 1
+control.4.FINAL 1
