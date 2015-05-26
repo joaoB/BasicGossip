@@ -9,7 +9,7 @@ class Test(name: String) extends Control {
   override def execute: Boolean = {
     bidirectionalScore
     bidirectionalHpv
-    solvingChallenges
+   // solvingChallenges
     false
   }
 

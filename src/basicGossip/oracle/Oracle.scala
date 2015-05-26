@@ -1,21 +1,16 @@
 package basicGossip.oracle
 
+import scala.collection.mutable.MutableList
+import scala.util.Random
+
 import basicGossip.messages.Info
 import basicGossip.node.Usernode
-import scala.collection.mutable.MutableList
-import peersim.config.Configuration
-import peersim.core.Network
-import hyparview.HyParViewJoinTest
-import peersim.config.FastConfig
+import basicGossip.protocols.AltruisticProtocol
 import basicGossip.protocols.Link
-import scala.util.Random
-import basicGossip.protocols.BasicGossip
-import basicGossip.node.Usernode
-import basicGossip.protocols.AltruisticProtocol
-import peersim.core.Node
-import peersim.core.GeneralNode
-import basicGossip.protocols.FRProtocol
-import basicGossip.protocols.AltruisticProtocol
+import hyparview.HyParViewJoinTest
+import peersim.config.Configuration
+import peersim.config.FastConfig
+import peersim.core.Network
 
 //Oracle has an eye on everythinggi
 class Oracle {
@@ -33,11 +28,11 @@ class Oracle {
   val QUARANTINE = Configuration.getInt("Oracle.QUARANTINE")
 
   val RACIONAL_MAX_CONNECTIONS = Configuration.getInt("Oracle.RACIONAL_MAX_CONNECTIONS")
-  
+
   val total = 1 until Network.size toList
   val frAmount = (Network.size * frPercentage).toInt
   val freeRiders = Random.shuffle(total).take(frAmount)
-  val altruistics = total diff freeRiders
+  var altruistics = total diff freeRiders
   var kicked = Map[Int, Int]()
   var badKicked = Map[Int, Int]()
   var maxHopInfo = 0
@@ -45,9 +40,14 @@ class Oracle {
   var frAmountOfSentMessages: Int = 0
   var avgHops = MutableList[Int]()
 
+  var challengesBeforeStream = 0
   var FRchallenges = 0
   var altruisticChallanges = 0
   var currentPackage = 0
+  var disconnectsBeforeStream = 0
+
+  def incChallengesBeforeStream = challengesBeforeStream += 1
+  def incDisconnects = disconnectsBeforeStream += 1
 
   def updateCurrentPackage = currentPackage += 1
 
@@ -116,8 +116,9 @@ class Oracle {
     })
   }
 
-  def nodeHpvProtocol(id: Int): (Usernode, HyParViewJoinTest) =
+  def nodeHpvProtocol(id: Int): (Usernode, HyParViewJoinTest) = {
     nodesHpvProtocol(List(getNode(id))).head
+  }
 
   def getLinkable(usernode: Usernode): Link =
     usernode.getProtocol(FastConfig.getLinkable(0)) match {
@@ -132,41 +133,51 @@ class Oracle {
     }
   }
 
+  var simpleJoins = 0
   def addAltruisticNode = {
-    Oracle.getNode(Oracle.altruistics.head).clone match {
-      case node: Usernode =>
-        Network.add(node)
-        node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
-        nodesHpvProtocol(node.getID.toInt)._2.setMyNode(Network.get(node.getID.toInt), getViewSize(node))
-        val streamerHpv = Oracle.nodeHpvProtocol(0)
+    val node = new Usernode("usernode")
+    Network.add(node)
+    val nodeID = node.getID.toInt
+    val nodeNode = Network.get(nodeID)
 
-        for (a <- 0 until HyParViewJoinTest.activeViewSize) {
-          streamerHpv._2.simpleJoin(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
-        }
+    node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+    nodesHpvProtocol(nodeID)._2.setMyNode(nodeNode, getViewSize(node))
 
-        val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
-        node.initializeScoreList(prot.toSeq map (x => x.getID))
-        prot map {
-          x =>
-            val unLink = Oracle.getLinkable(node)
-            //unLink.addNeighbor(Network.get(0))
-            unLink.addNeighbor(x)
-            node.addChallenge(Oracle.getNode(x.getID.toInt))
-            Oracle.getNode(x.getID.toInt).addWaitingConfirm(node.getID.toInt)
+    for (id <- 0 until HyParViewJoinTest.activeViewSize) {      
+      simpleJoins += 1     
+      val streamerHpv = Oracle.nodeHpvProtocol(Random.nextInt(Network.size))
+      streamerHpv._2.simpleJoin(nodeNode, HyParViewJoinTest.protocolID, true)
+    }
 
-            println(node)
+    val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
+    node.initializeScoreList(prot.toSeq map (x => x.getID))
+    prot map {
+      x =>
+        val unLink = Oracle.getLinkable(node)
+        //unLink.addNeighbor(Network.get(0))
+        unLink.addNeighbor(x)
+        node.addChallenge(Oracle.getNode(x.getID.toInt))
+        Oracle.getNode(x.getID.toInt).addWaitingConfirm(node.getID.toInt)
 
-            Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
-            x match {
-              case a: Usernode => a.addToScoreList(node.getID)
-            }
+        Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
+        x match {
+          case a: Usernode if a.getID != 0 => 
+            a.addToScoreList(node.getID)
+          case _ =>
         }
 
     }
 
+    altruistics = altruistics.::(node.getID.toInt)
+    
   }
 
   def getViewSize(un: Usernode) = {
+    //    un.getID match {
+    //      case 0 => Network.size
+    //      case n if Oracle.freeRiders.contains(n) => RACIONAL_MAX_CONNECTIONS
+    //      case n if !Oracle.freeRiders.contains(n) => HyParViewJoinTest.activeViewSize
+    //    }
     if (Oracle.freeRiders contains un.getID.toInt) {
       RACIONAL_MAX_CONNECTIONS
     } else {

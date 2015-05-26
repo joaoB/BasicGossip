@@ -18,7 +18,7 @@ class TestingObserver(name: String) extends BasicGossipObserver(name) {
     for (i <- 1 until Network.size) {
       print("Node: " + i + " ->")
       Network.get(i) match {
-        case un: Usernode => println(un.scoreList.filter(_._2 > 0))
+        case un: Usernode => println(un.scoreList.filter(_._2.score > 0))
       }
     }
   }

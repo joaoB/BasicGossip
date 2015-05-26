@@ -41,12 +41,23 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   override def nextCycle(node: Node, pid: Int): Unit = {
     //if (info % 50 == 0) println("generating new info " + info)
-//    if (info == 500) {
-//      for (a <- 0 until 1)
-//        Oracle.addAltruisticNode
-//      Oracle.getNode(1000).scoreList
-//      println("NEWWWWWWWWWWWWWWWWWWWWWWWWWW - > " + Oracle.getNode(1000).scoreList)
-//    }
+    //    if (info == 500) {
+    //      for (a <- 0 until 1)
+    //        Oracle.addAltruisticNode
+    //      Oracle.getNode(1000).scoreList
+    //      println("NEWWWWWWWWWWWWWWWWWWWWWWWWWW - > " + Oracle.getNode(1000).scoreList)
+    //    }
+
+    try {
+      println("node: " + 72 + " -> " + Oracle.getNode(72).scoreList.size)
+    }
+    catch {
+      case e: Throwable => 
+    }
+
+    if (Network.size < 1000) {
+      Oracle.addAltruisticNode
+    }
 
     Oracle.updateCurrentPackage
     sendInfo(Oracle.getNode(0), newInfo, pid)
@@ -58,14 +69,19 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
     trans match {
       case t: Transport =>
-        DistinctRandom.sample(1 until Network.size toList, Oracle.fanout) map {
+        DistinctRandom.sample(1 until Network.size toList, Math.min(Oracle.fanout, Network.size)) map {
           //Random.shuffle(Oracle.altruistics).take(fanout) map {  
           id =>
-            link.getNeighbor(id) match {
-              case peern if peern.isUp =>
-                t.send(streamer, peern, info, pid)
-              case peern if !peern.isUp => None
+            val peern = Oracle.getNode(id)
+            if (peern.isUp) {
+              t.send(streamer, peern, info, pid)
             }
+          //            link.getNeighbor(id) match {
+          //              case peern if peern.isUp =>
+          //                println("sending " + peern.getID)
+          //                t.send(streamer, peern, info, pid)
+          //              case peern if !peern.isUp => None
+          //            }
         }
     }
 

@@ -1,41 +1,32 @@
 package basicGossip.protocols
 
-import basicGossip.messages.Info
+import basicGossip.node.Neighbor
+import basicGossip.node.NodeStatus
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
-import peersim.transport.Transport
-import peersim.config.FastConfig
 import peersim.core.Node
-import scala.util.Random
 
 class RationalProtocol(name: String) extends GeneralProtocol {
 
-  def initializeScoreList(un: Usernode, ids: Seq[Long]) = {
+  override def initializeScoreList(un: Usernode, ids: Seq[Long]) = {
     un.scoreList = Map(ids map {
-      id => id -> 0F
+      id => id -> Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
     }: _*)
   }
 
   override def addToScoreList(un: Usernode, nid: Long) {
-    un.scoreList = un.scoreList.updated(nid, Oracle.baseRank.toFloat)
+    val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
+    un.scoreList = un.scoreList.updated(nid, neigh)
   }
-
   override def canAcceptNewNeighbor(un: Usernode) = {
-    val max = 10
-    Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size < max &&
-      un.waitingConfirm.size + un.scoreList.size + un.solvingChallenges.size < max
-
+    un.solvingChallenges.size == 0
+    
   }
 
   override def computeFanout(gossiper: Usernode, sender: Node): Set[Long] = {
-    val neighbors = gossiper.scoreList.filter(x => x._1 != 0 && x._1 != sender.getID) filter {
-      //     case (id, score) if score >= 13 => true
-      //   case _ => false
-
-      case (id, score) if score >= Oracle.baseRank => aboveBaseRank
-      case (id, score) if Oracle.baseRank > score && score >= Oracle.FR_THRESHOLD => belowBaseRank(score)
-      case (id, score) if score < Oracle.FR_THRESHOLD => false
-
+    val neighbors = gossiper.scoreList.filter(x => x._1 != 0) filter {
+      case (id, neigh) if neigh.score >= 13 => true
+      case _ => false
     }
     //println(neighbors.keySet.size)
     neighbors.keySet

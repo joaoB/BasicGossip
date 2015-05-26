@@ -10,6 +10,7 @@ import peersim.core.Network
 import peersim.core.Node
 import peersim.dynamics.NodeInitializer
 import scala.util.Random
+import basicGossip.observers.AvgReliability
 
 class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
@@ -18,7 +19,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   val streamerID = 0
 
   def execute = {
-
+  
     Oracle.altruistics map {
       id => initializeAltruistic(Oracle.getNode(id))
     }
@@ -72,29 +73,29 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     //
     //    }
     //    
-//    val maxN = Oracle.RACIONAL_MAX_CONNECTIONS
-//    Oracle.nodesHpvProtocol.filter(Oracle.freeRiders contains _._1.getID).filter(_._2.neighbors.size > maxN) map {
-//      case (un: Usernode, prot: HyParViewJoinTest) =>
-//        prot.neighbors.take(prot.neighbors.size - maxN) map {
-//          x =>
-//            prot.setMyNode(Network.get(un.getID.toInt), Oracle.getViewSize(un))
-//            prot.disconnect(x)
-//
-//            Oracle.nodeHpvProtocol(x.getID.toInt)._2.disconnect(un)
-//  
+    //    val maxN = Oracle.RACIONAL_MAX_CONNECTIONS
+    //    Oracle.nodesHpvProtocol.filter(Oracle.freeRiders contains _._1.getID).filter(_._2.neighbors.size > maxN) map {
+    //      case (un: Usernode, prot: HyParViewJoinTest) =>
+    //        prot.neighbors.take(prot.neighbors.size - maxN) map {
+    //          x =>
+    //            prot.setMyNode(Network.get(un.getID.toInt), Oracle.getViewSize(un))
+    //            prot.disconnect(x)
+    //
+    //            Oracle.nodeHpvProtocol(x.getID.toInt)._2.disconnect(un)
+    //  
+    //        }
+    //
+    //    }
+
+//    val maxView = 10
+//    val un = Oracle.nodesHpvProtocol.filter(x => Oracle.freeRiders.contains(x._1.getID))
+//    un.filter(_._2.neighbors.size > maxView) map {
+//      x =>
+//        while (x._2.neighbors.size > maxView) {
+//          Oracle.nodesHpvProtocol(x._2.neighbors.head.getID.toInt)._2.disconnect(x._1)
+//          x._2.disconnect(x._2.neighbors.head)
 //        }
-//
 //    }
-    
-    val maxView = 10
-    val un = Oracle.nodesHpvProtocol.filter(x => Oracle.freeRiders.contains(x._1.getID))
-    un.filter(_._2.neighbors.size > maxView) map {
-      x =>
-        while (x._2.neighbors.size > maxView) {
-          Oracle.nodesHpvProtocol(x._2.neighbors.head.getID.toInt)._2.disconnect(x._1)
-          x._2.disconnect(x._2.neighbors.head)
-        }
-    }
 
     //        while(un._2.neighbors.size < maxN ){
     //         Oracle.nodeHpvProtocol(Random.nextInt(1000))._2.simpleJoin(Network.get(un._1.getID.toInt), HyParViewJoinTest.protocolID)
@@ -104,7 +105,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     //println(Oracle.nodesHpvProtocol.filter(Oracle.freeRiders contains _._1.getID).head._2.neighbors().size)
 
     globalHyParViewLinkage
-
+    
     //traditionalHyParViewLinkage
 
     /*    Oracle.nodeHpvProtocol(Oracle.getLinkable(2).getNeighbors.head.getID.toInt)._2.simpleJoin(Oracle.getNode(2), HyParViewJoinTest.protocolID)
@@ -129,8 +130,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
       val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
       val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.minWindow) map {
         a =>
-          streamerHpv._2.join(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
-          if (solve) Oracle.altruisticChallanges += 1
+          streamerHpv._2.simpleJoin(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
       }
       Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.minWindow)
     }
@@ -152,7 +152,24 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
             streamerLink.addNeighbor(un)
         }
     }
-    
+/*
+    AvgReliability.c
+
+    println("---------------------------------------------------------------------")
+
+    for (id <- 0 until 100) {
+      Oracle.addAltruisticNode
+    }
+    AvgReliability.c
+    println("SIMPLE JOINS " + Oracle.simpleJoins)
+    val a = (for (id <- 1000 until 1100) yield Oracle.getNode(id).scoreList.size) toList
+      
+    println("SCORE LIST " + Oracle.getNode(1000).scoreList.keySet)
+    println("HPV " + Oracle.nodeHpvProtocol(1000)._2.neighbors().map(_.getID).toList)
+    println("MIN size  " + a.min)
+    println("MAX size " + a.max)
+    println("avg new comers score size " + a.sum / a.size)
+*/
     /*
     for (idRemove <- 1 to 300) {
       Oracle.getNode(idRemove).setFailState(1)

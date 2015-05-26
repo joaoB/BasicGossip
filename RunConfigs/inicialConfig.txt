@@ -1,21 +1,21 @@
 # network size
-SIZE 1000
+SIZE 1
 HyParViewJoinTest.ACTIVE_VIEW_SIZE = 12
-Oracle.FANOUT 8
-Oracle.MIN_WINDOW 3
-Oracle.MIN_WINDOW_TO_SEARCH 5
+Oracle.FANOUT 7
+Oracle.MIN_WINDOW 7
+Oracle.MIN_WINDOW_TO_SEARCH 7
 Usernode.SCORE_DELTA 1
 Oracle.FR_THRESHOLD -15
-Oracle.FR_PERCENTAGE 0.3
+Oracle.FR_PERCENTAGE 0
 Oracle.QUARANTINE 105
 Oracle.RACIONAL_MAX_CONNECTIONS 12
 
-Oracle.FORWARD_PROBABILITY 0.7
+Oracle.FORWARD_PROBABILITY 0.35
 Oracle.REDUNDANCY_FACTOR 0
 Oracle.INITIALIZE_SCORE 0
 # parameters of periodic execution
 
-CYCLES 3000
+CYCLES 1500
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -98,11 +98,10 @@ init.sch.protocol avg searchN solveChallenge
 #control.2.step 99999999999999999
 #control.2.FINAL 1
 
+#control.4 basicGossip.observers.Test
+#control.4.step CYCLE * 1
+#control.4.FINAL 1
+
 control.3 basicGossip.observers.AvgReliability
-control.3.step CYCLE * 10000
+control.3.step CYCLE * 1000
 control.3.FINAL 1
-
-
-control.4 basicGossip.observers.Test
-control.4.step CYCLE * 1
-control.4.FINAL 1

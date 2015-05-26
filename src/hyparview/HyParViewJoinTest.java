@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
+import basicGossip.oracle.Oracle;
 import peersim.cdsim.CDProtocol;
 import peersim.config.Configuration;
 import peersim.core.Linkable;
@@ -137,10 +138,17 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 	 */
 
 	public void simpleJoin(Node newMember, int protocolID) {
+		simpleJoin(newMember, protocolID, false);
+	}
+	
+	public void simpleJoin(Node newMember, int protocolID, boolean print) {
+		
+		//System.out.println("Node: " + this.myNode.getID() + " receiving simple join from " + newMember.getID());
 		ArrayList<Node> peersSelected = new ArrayList<Node>();
 		this.peerIterator.reset(this.activeDegree);
 
 		try {
+			
 			peersSelected.add(this.activeMembership[this.peerIterator.next()]);
 		} catch (NoSuchElementException e) {
 
@@ -153,14 +161,25 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			}
 
 		}
-		((HyParViewJoinTest) peersSelected.remove(0).getProtocol(protocolID))
+		
+		Node selected = peersSelected.remove(0);
+		//System.out.println(" selected "  + selected.getID());
+		
+		((HyParViewJoinTest) selected.getProtocol(protocolID))
 				.simpleRandomWalk(newMember, HyParViewJoinTest.randomLenght,
-						myNode, protocolID);
+						myNode, protocolID, print);
 		this.msgSent++; // Increase the number of messages sent by this node
 	}
 
 	public boolean simpleRandomWalk(Node newMember, int ttl, Node originator,
 			int protocolID) {
+		return simpleRandomWalk(newMember, ttl,originator,
+				 protocolID, false);
+	}
+
+	public boolean simpleRandomWalk(Node newMember, int ttl, Node originator,
+			int protocolID, boolean print) {
+		
 		boolean status = this.myNode.isUp();
 		if (status) {
 			if (ttl <= 0 || this.activeDegree <= 1) {
@@ -168,7 +187,12 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 					if (((HyParViewJoinTest) newMember
 							.getProtocol(HyParViewJoinTest.protocolID))
 							.simpleJoinConnect(this.myNode)) {
-
+						
+						if (print) {
+							//System.out.println("NODE : " + newMember.getID() + " will solve puzzle to " + this.myNode.getID());
+						}
+						basicGossip.oracle.Oracle$.MODULE$
+								.incChallengesBeforeStream();
 						this.simpleActiveMembershipAddNeighbour(newMember);
 					}
 				}
@@ -186,7 +210,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 				((HyParViewJoinTest) destino.getProtocol(protocolID))
 						.simpleRandomWalk(newMember, ttl - 1, this.myNode,
-								protocolID);
+								protocolID,print);
 			}
 		}
 
@@ -221,7 +245,6 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 					if (((HyParViewJoinTest) newMember
 							.getProtocol(HyParViewJoinTest.protocolID))
 							.joinConnect(this.myNode)) {
-
 						// If active view is full make a disconect from someone
 						// random
 						if (this.activeDegree == HyParViewJoinTest.activeViewSize) {
@@ -231,12 +254,16 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 						// Add node to ones current view
 						if (!this.activeMembershipAddNeighbour(newMember)) {
+
 							// TODO: is this the better aproach??? Think about
 							// this with time
 							// System.err
 							// .println("Warning: A random walked stoped here but i could not add the new node: random walk droped!");
 						} else {
 							// this.jstat.newNeighbor();
+							basicGossip.oracle.Oracle$.MODULE$
+									.incChallengesBeforeStream();
+
 						}
 					} else {
 						// This shoud not happen
@@ -343,8 +370,11 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 
 			status = new Boolean(this.activeMembershipAddNeighbour(peer));
 			if (status.booleanValue()) {
+				// basicGossip.oracle.Oracle$.MODULE$.incChallengesBeforeStream();
+
 			}
 			// this.jstat.newNeighbor();
+
 		}
 
 		return status;
@@ -397,6 +427,8 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 				position = i;
 
 		if (position != -1) {
+			basicGossip.oracle.Oracle$.MODULE$.incDisconnects();
+
 			Node temp = this.activeMembership[position];
 			this.activeMembership[position] = null;
 			this.activeDegree--;
@@ -405,7 +437,7 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 			// this.jstat.disconnected();
 		} else {
 			// System.err
-			 //.println("Warning: Received a disconnect notification from someone i am not neighbour");
+			// .println("Warning: Received a disconnect notification from someone i am not neighbour");
 		}
 	}
 
@@ -451,7 +483,6 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 					sucess = true;
 				}
 			}
-
 		return sucess;
 	}
 
@@ -761,7 +792,9 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 				while (this.activeMembership[position] != null)
 					position++;
 				this.activeDegree++;
+
 			}
+			basicGossip.oracle.Oracle$.MODULE$.incChallengesBeforeStream();
 
 			// this.jstat.newNeighbor();
 			this.activeMembership[position] = newMember;
@@ -805,7 +838,8 @@ public class HyParViewJoinTest implements Linkable, CDProtocol {
 	}
 
 	public void setMyNode(Node me, int activeViewSize) {
-		Node[] a = new Node[activeViewSize];
+		int newActiveViewSize = activeViewSize + 3;
+		Node[] a = new Node[newActiveViewSize];
 		System.arraycopy(activeMembership, 0, a, 0, activeMembership.length);
 		activeMembership = a;
 		this.myNode = me;

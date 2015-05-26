@@ -31,6 +31,8 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
     Oracle.forwardProbability > Random.nextFloat
   }
 
+  def newNodeSolving(id: Int) = {}
+  
   def belowBaseRank(score: Float): Boolean = {
     val calced = Oracle.forwardProbability * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
     val random = Random.nextFloat
@@ -76,6 +78,7 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
   }
 
   def saveInfo(node: Usernode, info: Info): Boolean = {
+    
     node.increaseScore(info.sender, 1)
     node.saveMessage(info)
     true
