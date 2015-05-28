@@ -48,15 +48,27 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
     //      println("NEWWWWWWWWWWWWWWWWWWWWWWWWWW - > " + Oracle.getNode(1000).scoreList)
     //    }
 
-    try {
-      println("node: " + 72 + " -> " + Oracle.getNode(72).scoreList.size)
-    }
-    catch {
-      case e: Throwable => 
-    }
+    //    try {
+    //      println("node: " + 72 + " -> " + Oracle.getNode(72).scoreList.size)
+    //    }
+    //    catch {
+    //      case e: Throwable => 
+    //    }
 
     if (Network.size < 1000) {
+
       Oracle.addAltruisticNode
+    }
+
+    for (id <- 1 until Network.size) {
+      Oracle.getNode(id).getProtocol(3) match {
+        case p: CDProtocol =>
+          p.nextCycle(Oracle.getNode(id), 3)
+      }
+      Oracle.getNode(id).getProtocol(2) match {
+        case p: CDProtocol =>
+          p.nextCycle(Oracle.getNode(id), 2)
+      }
     }
 
     Oracle.updateCurrentPackage
@@ -74,23 +86,11 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
           id =>
             val peern = Oracle.getNode(id)
             if (peern.isUp) {
+              //println("sendin to " + peern.getID)
               t.send(streamer, peern, info, pid)
             }
-          //            link.getNeighbor(id) match {
-          //              case peern if peern.isUp =>
-          //                println("sending " + peern.getID)
-          //                t.send(streamer, peern, info, pid)
-          //              case peern if !peern.isUp => None
-          //            }
         }
     }
-
-    if (link.degree > 0) {
-
-    } else {
-      println("Could not send. Is degree > 0 ?")
-    }
-
   }
 
   private def newInfo: Info = {

@@ -8,6 +8,7 @@ import peersim.core.Linkable
 import hyparview.HyParViewJoinTest
 import basicGossip.protocols.Link
 import basicGossip.oracle.Oracle
+import basicGossip.node.NodeStatus
 
 class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
@@ -15,7 +16,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //dumpAvgReliability
     //reliabilityAbovePercentage
     //dumpNodesWithZeroMessages
-    altruisticReliability
+    //altruisticReliability
     //freeriderReliability
     //dumpFreeRiders
     //    newNodesReliability
@@ -31,26 +32,41 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //altReliLastRounds
     //falsePos
     //printScore
-    isolatedNodes
+    disconnects
+    //isolatedNodes
     false
   }
 
+  def disconnects = {
+    println("disconnects " + Oracle.disconnects)
+  }
+  
   def isolatedNodes = {
     val isolatedNodes = Oracle.allNodesExceptStreamer filter {
       un => un.scoreList.keySet.filter(_ != 0).toList.diff(Oracle.freeRiders).isEmpty
 
     }
 
+    println("alt puzzles " + Oracle.altruisticChallanges)
     println("isolated nodes: " + isolatedNodes.size)
-    val sorted = isolatedNodes.sortBy { x => x.scoreList.size } map (_.scoreList.size)
-    println("isolated nodes MIN connections: " + sorted.reduceOption(_ min _) )
+    val a = isolatedNodes.sortBy { x => x.scoreList.size }
+    val sorted = a map (_.scoreList.size)
+    val nodesIds = a map (_.getID)
+    println("isolated nodes ids -> " + a)
+    println("isolated nodes MIN connections: " + sorted.reduceOption(_ min _))
   }
 
   def printScore = {
-    val score = Oracle.getNode(500).scoreList map {
-      a => print(a._2.score + "\t")
+    try {
+      val score = Oracle.getNode(1).scoreList.filter(_._2.status == NodeStatus.ACTIVE) map {
+        a =>
+          val score = a
+          print(a._1 + " > " + a._2.score +  " || \t")
+      }
+      println
+    } catch {
+      case e: Throwable =>
     }
-    println
   }
 
   def falsePos = println(Oracle.badKicked.size)
@@ -541,7 +557,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     }
 
     val last = Oracle.altruistics map {
-      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 1000).size.toFloat / 1000
+      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 500).size.toFloat / 500
     }
 
     println("false positives : " + Oracle.badKicked.size)
@@ -733,7 +749,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       case node if !node.dumpFreeRiders.isEmpty => 
         print("Node " + node.getID + "-> ")
         node.dumpFreeRiders map {
-          x => print(x + " ")
+          x => print(x + " "))
         }
         println
       case _ =>

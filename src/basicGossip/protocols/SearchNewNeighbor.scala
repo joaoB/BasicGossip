@@ -27,6 +27,7 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
 
     kickFreeRiders(un)
 
+    /*
     if (un.shouldLookForNewNeighbor) {
  
       Oracle.nodeHpvProtocol(neighID)._2.setMyNode(Network.get(neighID), Oracle.getViewSize(Oracle.getNode(neighID)))
@@ -56,7 +57,7 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
           }
 
       }
-    }
+    } */
   }
 
   def kickFreeRiders(un: Usernode): Boolean = {

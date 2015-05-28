@@ -2,7 +2,6 @@ package basicGossip.oracle
 
 import scala.collection.mutable.MutableList
 import scala.util.Random
-
 import basicGossip.messages.Info
 import basicGossip.node.Usernode
 import basicGossip.protocols.AltruisticProtocol
@@ -11,6 +10,10 @@ import hyparview.HyParViewJoinTest
 import peersim.config.Configuration
 import peersim.config.FastConfig
 import peersim.core.Network
+import hyparview.MyHyParView
+import hyparview.MyHyParView
+import scala.None
+import basicGossip.node.Usernode
 
 //Oracle has an eye on everythinggi
 class Oracle {
@@ -45,7 +48,7 @@ class Oracle {
   var altruisticChallanges = 0
   var currentPackage = 0
   var disconnectsBeforeStream = 0
-
+  var disconnects = 0
   def incChallengesBeforeStream = challengesBeforeStream += 1
   def incDisconnects = disconnectsBeforeStream += 1
 
@@ -135,20 +138,33 @@ class Oracle {
 
   var simpleJoins = 0
   def addAltruisticNode = {
-    val node = new Usernode("usernode")
-    Network.add(node)
+    
+    val n = new Usernode("a")
+    Network.add(n)
+    
+    val node = Oracle.getNode(n.getID.toInt)
+    node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
+
     val nodeID = node.getID.toInt
     val nodeNode = Network.get(nodeID)
 
-    node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
-    nodesHpvProtocol(nodeID)._2.setMyNode(nodeNode, getViewSize(node))
+    //nodesHpvProtocol(nodeID)._2.setMyNode(nodeNode, getViewSize(node))
 
     for (id <- 0 until HyParViewJoinTest.activeViewSize) {      
       simpleJoins += 1     
-      val streamerHpv = Oracle.nodeHpvProtocol(Random.nextInt(Network.size))
-      streamerHpv._2.simpleJoin(nodeNode, HyParViewJoinTest.protocolID, true)
+      //val streamerHpv = Oracle.nodeHpvProtocol(Random.nextInt(Network.size))
+      //streamerHpv._2.simpleJoin(nodeNode, HyParViewJoinTest.protocolID, true)
+      
+      val connect = Oracle.getNode(Random.nextInt(Network.size))
+      val lst = (1 until Network.size toList).diff(List(nodeID)).diff(node.scoreList.keySet toList)
+      
+      lst match {
+        case Nil => None
+        case x => MyHyParView.join(Oracle.getNode(Random.shuffle(x).head), node)
+      }
     }
-
+    
+    /*
     val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
     node.initializeScoreList(prot.toSeq map (x => x.getID))
     prot map {
@@ -156,6 +172,7 @@ class Oracle {
         val unLink = Oracle.getLinkable(node)
         //unLink.addNeighbor(Network.get(0))
         unLink.addNeighbor(x)
+        println("un lik0" + unLink)
         node.addChallenge(Oracle.getNode(x.getID.toInt))
         Oracle.getNode(x.getID.toInt).addWaitingConfirm(node.getID.toInt)
 
@@ -166,7 +183,7 @@ class Oracle {
           case _ =>
         }
 
-    }
+    }*/
 
     altruistics = altruistics.::(node.getID.toInt)
     

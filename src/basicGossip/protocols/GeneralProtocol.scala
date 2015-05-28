@@ -31,8 +31,8 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
     Oracle.forwardProbability > Random.nextFloat
   }
 
-  def newNodeSolving(id: Int) = {}
-  
+  def newNodeSolving(un: Usernode, id: Int) = {}
+
   def belowBaseRank(score: Float): Boolean = {
     val calced = Oracle.forwardProbability * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
     val random = Random.nextFloat
@@ -63,22 +63,19 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
 
   def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (saveInfo(node, info)) {
-      val linkable = Oracle.getLinkable(node)
+      //val linkable = Oracle.getLinkable(node)
       computeFanout(node, info.sender) map {
         id =>
-          linkable.getNeighborById(id) match {
-            case Some(peern) if peern.isUp =>
-              // if (!peern.messageList.contains(info.value)) {
+          Oracle.getNode(id.toInt) match {
+            case peern if peern.isUp =>
               sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
-            //}
-            case _ => print("node not up")
+            case _ => //print("node not up")
           }
       }
     }
   }
 
   def saveInfo(node: Usernode, info: Info): Boolean = {
-    
     node.increaseScore(info.sender, 1)
     node.saveMessage(info)
     true

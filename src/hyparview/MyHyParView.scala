@@ -1,8 +1,10 @@
 package hyparview
 
-import basicGossip.node._
+import scala.annotation.migration
 import scala.util.Random
+import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
+import basicGossip.node.NodeStatus
 
 class MyHyParView {
 
@@ -15,8 +17,8 @@ class MyHyParView {
         case n if n == 0 => disconnectOneAcceptOther(node, newMember)
         case _ =>
           if (canConnect(node, newMember)) {
-            node.newNodeSolving(newMember.getID)
-            newMember.addChallenge(node)
+            node.newNodeSolving(newMember.getID.toInt)
+            newMember.addNewChallenge(node)
           } else {
             val nextID = Random.shuffle(node.scoreList.keys).head
             val nextNode = Oracle.getNode(nextID.toInt)
@@ -30,15 +32,31 @@ class MyHyParView {
   }
 
   private def canConnect(node: Usernode, newMember: Usernode): Boolean = {
-    !node.scoreList.keySet.contains(newMember.getID) &&
-      (node.scoreList.values.toSeq.filter{
-      x => node.isActive(x.status)
-    }).size < MAX_CONNECTIONS 
+    val a = !node.scoreList.keySet.contains(newMember.getID) &&
+      (node.scoreList.values.toSeq.filter {
+        x => x.status == NodeStatus.ACTIVE
+      }).size < MAX_CONNECTIONS &&
+      node.getID != newMember.getID &&
+      !newMember.solvingChallenges.exists(_.sender.getID == node.getID)
+
+    a
 
   }
 
   private def disconnectOneAcceptOther(node: Usernode, newMember: Usernode) = {
+    if (node.getID != newMember.getID &&
+      !newMember.solvingChallenges.exists(_.sender.getID == node.getID)
+      && !node.scoreList.keySet.contains(newMember.getID)) {
+      Oracle.disconnects += 1
+      node.newNodeSolving(newMember.getID.toInt)
+      newMember.addNewChallenge(node)
+      true
+    } else {
+      false
+    }
 
   }
 
 }
+
+object MyHyParView extends MyHyParView
