@@ -3,11 +3,11 @@ package basicGossip.protocols
 import peersim.cdsim.CDProtocol
 import peersim.core.Node
 import basicGossip.node.Usernode
-import hyparview.HyParViewJoinTest
 import basicGossip.oracle.Oracle
 import peersim.core.Network
 import peersim.edsim.EDProtocol
 import scala.util.Random
+import hyparview.MyHyParView
 
 class SearchNewNeighbor(name: String) extends CDProtocol {
 
@@ -26,53 +26,26 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
     }
 
     kickFreeRiders(un)
+    lookForNeighbors(un)
 
-    /*
-    if (un.shouldLookForNewNeighbor) {
- 
-      Oracle.nodeHpvProtocol(neighID)._2.setMyNode(Network.get(neighID), Oracle.getViewSize(Oracle.getNode(neighID)))
-      Oracle.nodeHpvProtocol(neighID)._2.simpleJoin(un, HyParViewJoinTest.protocolID)
-
-      val challenges = un.solvingChallenges map (_.sender.getID)
-
-      //val a = (Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.toList.map(_.getID).groupBy(identity).collect { case (x, ys) if ys.size > 1 => x })
-      val a = ((Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.toList.map(_.getID).diff(un.scoreList.map(_._1).toList))).diff(challenges)
-      
-      a diff un.waitingConfirm map {
-        newMember =>
-          //println("Node: " + un.getID + " try to connect to " + newMember)
-          if (Oracle.getNode(newMember.toInt).canAcceptNewNeighbor
-            && un.addChallenge(Oracle.getNode(newMember.toInt))) {
-            if (Oracle.freeRiders contains un.getID) {
-              //println("adding")
-              Oracle.FRchallenges += 1
-            } else {
-              Oracle.altruisticChallanges += 1
-            }
-
-            Oracle.getNode(newMember.toInt).addWaitingConfirm(un.getID.toInt)
-          } else {
-            Oracle.nodeHpvProtocol(newMember.toInt)._2.disconnect(un)
-            Oracle.nodeHpvProtocol(un.getID.toInt)._2.disconnect(Oracle.getNode(newMember.toInt))
-          }
-
-      }
-    } */
   }
 
-  def kickFreeRiders(un: Usernode): Boolean = {
+  def lookForNeighbors(un: Usernode) = {
+    if (un.scoreList.size < Oracle.MIN_WIN_TO_SEARCH) {
+      Random.shuffle(un.scoreList).headOption match {
+        case Some(elem) =>
+          val node = Oracle.getNode(elem._1.toInt)
+          MyHyParView.join(node, un)
+        case None =>
+      }
+    }
+  }
+
+  def kickFreeRiders(un: Usernode) = {
 
     val frs = un.freeRiders
     val link = Oracle.getLinkable(un)
     if (un.freeRiders.size > 0) {
-
-      //      if (un.freeRiders contains Oracle.freeRiders.head) {
-      //        println("Node: " + un.getID + " will kick free rider")
-      //        val a = un.scoreList(Oracle.freeRiders.head)
-      //        println ("score: " + a)
-      //        println("FR -> kicker " + Oracle.getNode(Oracle.freeRiders.head).scoreList(un.getIndex))
-      //      }
-
       frs map {
         fr =>
           if (Oracle.freeRiders.contains(fr))
@@ -85,25 +58,8 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
 
           Oracle.getLinkable(fr.toInt).removeNeighbor(un)
           link.removeNeighbor(Oracle.getNode(fr.toInt))
-
-          //          println("---------------------------------")
-          val a = Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors().map(_.getID).toList
-          val b = Oracle.nodeHpvProtocol(fr.toInt)._2.neighbors().map(_.getID).toList
-          //          println("NODE : " + un.getID + " -> " + a + " SIZE -> " + a.size)
-          //          println("NODE : " + fr.toInt + " -> " + b + " SIZE -> " + b.size)
-
-          Oracle.nodeHpvProtocol(un.getID.toInt)._2.disconnect(Network.get(fr.toInt))
-          Oracle.nodeHpvProtocol(fr.toInt)._2.disconnect(Network.get(un.getID.toInt))
-
-          val c = Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors().map(_.getID).toList
-          val d = Oracle.nodeHpvProtocol(fr.toInt)._2.neighbors().map(_.getID).toList
-        //          println("NODE : " + un.getID + " -> " + c + " SIZE -> " + c.size)
-        //          println("NODE : " + fr.toInt + " -> " + d + " SIZE -> " + d.size)
       }
-      false
     }
-
-    false
   }
 
 }

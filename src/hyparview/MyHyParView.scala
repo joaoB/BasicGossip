@@ -32,31 +32,22 @@ class MyHyParView {
   }
 
   private def canConnect(node: Usernode, newMember: Usernode): Boolean = {
-    val a = !node.scoreList.keySet.contains(newMember.getID) &&
-      (node.scoreList.values.toSeq.filter {
-        x => x.status == NodeStatus.ACTIVE
-      }).size < MAX_CONNECTIONS &&
-      node.getID != newMember.getID &&
-      !newMember.solvingChallenges.exists(_.sender.getID == node.getID)
+    val b = node.getID != newMember.getID
+    val c = !newMember.scoreList.filter(_._2.status == NodeStatus.SOLVING).exists(_._1 == node.getID)
+    val d = node.scoreList.size < MAX_CONNECTIONS
 
-    a
+    b && c && d
 
   }
 
   private def disconnectOneAcceptOther(node: Usernode, newMember: Usernode) = {
-    if (node.getID != newMember.getID &&
-      !newMember.solvingChallenges.exists(_.sender.getID == node.getID)
-      && !node.scoreList.keySet.contains(newMember.getID)) {
-      Oracle.disconnects += 1
+    val a = node.getID != newMember.getID
+    val b = !node.scoreList.keySet.contains(newMember.getID)
+    if (a && b) {
       node.newNodeSolving(newMember.getID.toInt)
       newMember.addNewChallenge(node)
-      true
-    } else {
-      false
     }
 
   }
-
 }
-
 object MyHyParView extends MyHyParView

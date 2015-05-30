@@ -2,25 +2,22 @@ package basicGossip.node
 
 import scala.collection.mutable.BitSet
 import scala.collection.mutable.MutableList
+import NodeStatus.ACTIVE
+import NodeStatus.NodeStatus
+import NodeStatus.WAITING
 import basicGossip.messages.Info
 import basicGossip.messages.WaitCycles
 import basicGossip.oracle.Oracle
-import basicGossip.protocols.ChallengeSolver
 import basicGossip.protocols.GeneralProtocol
-import basicGossip.protocols.SearchNewNeighbor
-import hyparview.HyParViewJoinTest
 import peersim.config.Configuration
 import peersim.core.ModifiableNode
-import peersim.core.Network
 import peersim.core.Node
-
-import basicGossip.messages.WaitCycles
+import scala.util.Random
 
 object NodeStatus extends Enumeration {
   type NodeStatus = Value
   val ACTIVE, SOLVING, WAITING, DISCONNECTED = Value
 }
-import NodeStatus._
 case class Neighbor(score: Int, status: NodeStatus)
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
@@ -34,7 +31,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   var repeatedMessages = 0
 
   var waitingConfirm = MutableList[Int]()
-  var solvingChallenges = MutableList[WaitCycles]()
+  //var solvingChallenges = MutableList[WaitCycles]()
 
   val scoreDelta = Configuration.getDouble("Usernode." + "SCORE_DELTA").toFloat
 
@@ -51,49 +48,33 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   }
 
   def addNewChallenge(node: Usernode) {
-    Oracle.altruisticChallanges += 1
-    val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.SOLVING)
-    this.scoreList = this.scoreList.updated(node.getID, neigh)
-    this.addChallenge(node)
-  }
-
-  def addChallenge(sender: Usernode) = {
-    if (!solvingChallenges.exists { x => x.sender.getID == sender.getID }) {
-
-      //println("Node : " + this.getID + " adding " + sender.getID)
-      solvingChallenges.+=(WaitCycles(Oracle.QUARANTINE, sender))
-      true
-    } else {
-      false
+    val solving = scoreList.filter(_._2.status == NodeStatus.SOLVING)
+    if (!solving.exists(_._1 == node.getID)) {
+      val randomFactor = Random.nextInt(40)
+      val time = Oracle.QUARANTINE - 40 + randomFactor
+      val toAdd = Neighbor(time, NodeStatus.SOLVING)
+      this.scoreList = this.scoreList.updated(node.getID, toAdd)
     }
+
   }
 
   def solveChallenge = {
-    // println("NODE: " + this.getID)
-    //println("SOLVE CHALLENGES A " + solvingChallenges.map(x => (x.remainingCycles,x.sender.getID)))
 
-    val solved = solvingChallenges.find { x => x.remainingCycles > 0 } match {
-      case Some(elem) => MutableList(elem.copy(remainingCycles = elem.remainingCycles - 1))
-      case None => MutableList[WaitCycles]()
+    val solved = scoreList.filter(_._2.status == NodeStatus.SOLVING)
+
+    solved.find { x => x._2.score > 0 } match {
+      case Some(elem) => decreaseScore(Oracle.getNode(elem._1.toInt))
+      case None =>
     }
-
-    solvingChallenges = solved.headOption match {
-      case Some(elem) => solved ++ solvingChallenges.filter { x => x.sender.getID != elem.sender.getID }
-      case _ => solvingChallenges
-    }
-    //println("SOLVE CHALLENGES B " + solvingChallenges.map(x => (x.remainingCycles,x.sender.getID)))
-    //println("--------------------------------------")
-    //    val tail = solvingChallenges.drop(1)
-    //
-    //    val head = solvingChallenges.headOption match {
-    //      case Some(elem) => MutableList(elem.copy(remainingCycles = elem.remainingCycles - 1))
-    //      case _ => MutableList[WaitCycles]()
-    //    }
-    //    solvingChallenges = head ++ tail
-
   }
 
-  def cleanSolvedChallenges = solvingChallenges = solvingChallenges.filterNot(_.remainingCycles <= 0)
+  def cleanSolvedChallenges = {
+    println(scoreList)
+    scoreList.filter(x => x._2.status == NodeStatus.SOLVING) map {
+      elem => addToScoreList(elem._1)
+    }
+    println(scoreList)
+  }
 
   def saveMessage(info: Info) = {
     messageList.+=(info.value)
@@ -102,37 +83,36 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   def receivedSolvedChallenge(newMember: Usernode) = {
     val waiting = this.scoreList.filter(x => x._2.status == WAITING).map(_._1) toList
 
-    //if (this.waitingConfirm.contains(newMember.getID) && canAcceptNewNeighbor) {
     if (waiting.contains(newMember.getID) && canAcceptNewNeighbor) {
-
-      //  val link = Oracle.getLinkable(this)
-      // Oracle.getLinkable(newMember.getID.toInt).addNeighbor(this)
-      // link.addNeighbor(newMember)
-      
-      //println("received puzzle and will accept " + this.getID + " -> " + newMember.getID)
-
       Oracle.getNode(newMember.getID.toInt).addToScoreList(this.getID)
       this.addToScoreList(newMember.getID)
+
     } else {
       if (waiting.contains(newMember.getID)) {
 
-        val a = (this.scoreList.map {
+        val a = (this.scoreList.filter(_._1 != newMember.getID).map {
           x => (x._1, x._2.score)
-        }).toList.sortBy(_._2).headOption
+        }).toList
 
-        //better remove from solving
+        val min = a.minBy(_._2)._2
 
-        a match {
+        val b = a.filter(_._2 == min).headOption
+
+        b match {
           case Some(elem) =>
-            this.removeFromScoreList(elem._1)
-            Oracle.getNode(elem._1.toInt).removeFromScoreList(this.getID)
+            val id = elem._1.toInt
+
+            this.removeFromScoreList(id)
+            Oracle.getNode(id).removeFromScoreList(this.getID)
+
             this.addToScoreList(newMember.getID)
             newMember.addToScoreList(this.getID)
+
           case None =>
-            println(this.scoreList)
         }
 
       }
+
     }
   }
 
@@ -163,10 +143,12 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     scoreList = scoreList match {
       case map if map.contains(id) =>
         val newScore = map(id).score - 1
-        scoreList.updated(id, Neighbor(newScore, ACTIVE))
-      case _ =>
+        val status = map(id).status
+        scoreList.updated(id, Neighbor(newScore, status))
+      case map =>
         val newScore = -1
-        scoreList.updated(id, Neighbor(newScore, ACTIVE))
+        val status = map(id).status
+        scoreList.updated(id, Neighbor(newScore, status))
     }
   }
 
@@ -174,16 +156,11 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     behaviorProtocol.initializeScoreList(this, ids)
   }
 
-  def getHpvProtocol: HyParViewJoinTest =
-    this.getProtocol(HyParViewJoinTest.protocolID) match {
-      case prot: HyParViewJoinTest => prot
-    }
-
   override def clone(): Object = {
     this.scoreList = Map[Long, Neighbor]()
     this.messageList = BitSet()
     this.waitingConfirm = new MutableList[Int]()
-    this.solvingChallenges = new MutableList[WaitCycles]()
+    //this.solvingChallenges = new MutableList[WaitCycles]()
     super.clone()
   }
 
@@ -203,26 +180,4 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def addWaitingConfirm(id: Int) =
     if (!waitingConfirm.contains(id)) waitingConfirm += id
-
-  //  def receiveSolvedChallenge(id: Int) =
-  //    if (waitingConfirm.contains(id)) {
-  //      waitingConfirm = waitingConfirm.filter(_ != id)
-  //      addToScoreList(id)
-  //    }
-
-  //
-  //  def addNewNeighbor(id: Int): Boolean =
-  //    if (isWaitingConnection) {
-  //      scoreList = scoreList.updated(id, 0)
-  //      Oracle.getLinkable(this).addNeighbor(Network.get(id))
-  //      isWaitingConnection = false
-  //      true
-  //    } else false
-  //
-  //  def receivePositiveConfirm(nid: Int) = 
-  //    if (waitingConfirm.contains(nid)) {
-  //      scoreList = scoreList.updated(nid, 0)
-  //      Oracle.getLinkable(this).addNeighbor(Network.get(nid))
-  //    }
-
 }

@@ -63,7 +63,6 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
 
   def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (saveInfo(node, info)) {
-      //val linkable = Oracle.getLinkable(node)
       computeFanout(node, info.sender) map {
         id =>
           Oracle.getNode(id.toInt) match {

@@ -1,2 +1,0 @@
-package basicGossip.node
-

@@ -15,7 +15,6 @@ import scala.util.Random
 import utils.DistinctRandom
 import basicGossip.oracle.Oracle
 import basicGossip.observers.AvgReliability
-import hyparview.HyParViewJoinTest
 
 class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProtocol with EDProtocol {
 
@@ -56,9 +55,19 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
     //    }
 
     if (Network.size < 1000) {
-
-      Oracle.addAltruisticNode
+      //while (Network.size < 1000) {
+      Oracle.addNode
     }
+
+//    if (Oracle.currentPackage == 4000) {
+//      for (id <- 0 until 100) {
+//        Oracle.addNode
+//      }
+//    }
+
+    //    if (Oracle.currentPackage == 4000) {
+    //     Oracle.injectFreeRiders
+    //    }
 
     for (id <- 1 until Network.size) {
       Oracle.getNode(id).getProtocol(3) match {

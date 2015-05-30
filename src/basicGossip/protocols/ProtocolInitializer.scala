@@ -2,7 +2,6 @@ package basicGossip.protocols
 
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
-import hyparview.HyParViewJoinTest
 import peersim.config.Configuration
 import peersim.core.Control
 import peersim.core.IdleProtocol
@@ -20,7 +19,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
   def execute = {
   
-    Oracle.altruistics map {
+    /*Oracle.altruistics map {
       id => initializeAltruistic(Oracle.getNode(id))
     }
 
@@ -28,7 +27,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
       id => initializeFreeRider(Oracle.getNode(id))
     }
 
-    initializeViews
+    initializeViews*/
     false
   }
 
@@ -53,7 +52,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   def initializeViews = {
     //hyparview initialization
 
-    Oracle.nodesHpvProtocol map {
+   /* Oracle.nodesHpvProtocol map {
       case (un: Usernode, prot: HyParViewJoinTest) =>
         prot.setMyNode(Network.get(un.getID.toInt), Oracle.getViewSize(un))
     }
@@ -62,8 +61,8 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
     Oracle.allNodesExceptStreamer map {
       node => streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
-    }
-    rejoinIsolated()
+    }*/
+   // rejoinIsolated()
 
     //    val maxN = 10
     //    for (id <- 1 to maxN) {
@@ -104,7 +103,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
     //println(Oracle.nodesHpvProtocol.filter(Oracle.freeRiders contains _._1.getID).head._2.neighbors().size)
 
-    globalHyParViewLinkage
+    //globalHyParViewLinkage
     
     //traditionalHyParViewLinkage
 
@@ -125,18 +124,18 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     }*/
   }
 
-  private def rejoinIsolated(solve: Boolean = false) = {
-    def rejoinIsolatedAux: Boolean = {
-      val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
-      val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.minWindow) map {
-        a =>
-          streamerHpv._2.simpleJoin(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
-      }
-      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.minWindow)
-    }
-    while (rejoinIsolatedAux) {}
-  }
-
+//  private def rejoinIsolated(solve: Boolean = false) = {
+//    def rejoinIsolatedAux: Boolean = {
+//      val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
+//      val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.minWindow) map {
+//        a =>
+//          streamerHpv._2.simpleJoin(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
+//      }
+//      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.minWindow)
+//    }
+//    while (rejoinIsolatedAux) {}
+//  }
+/*
   private def globalHyParViewLinkage = {
     //streamer knows everybody
     val streamer = Oracle.getNode(streamerID)
@@ -222,5 +221,5 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
         }
     }
   }
-
+*/
 }

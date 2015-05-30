@@ -2,18 +2,17 @@ package basicGossip.oracle
 
 import scala.collection.mutable.MutableList
 import scala.util.Random
+
 import basicGossip.messages.Info
 import basicGossip.node.Usernode
 import basicGossip.protocols.AltruisticProtocol
+import basicGossip.protocols.FRProtocol
+import basicGossip.protocols.GeneralProtocol
 import basicGossip.protocols.Link
-import hyparview.HyParViewJoinTest
+import hyparview.MyHyParView
 import peersim.config.Configuration
 import peersim.config.FastConfig
 import peersim.core.Network
-import hyparview.MyHyParView
-import hyparview.MyHyParView
-import scala.None
-import basicGossip.node.Usernode
 
 //Oracle has an eye on everythinggi
 class Oracle {
@@ -32,10 +31,12 @@ class Oracle {
 
   val RACIONAL_MAX_CONNECTIONS = Configuration.getInt("Oracle.RACIONAL_MAX_CONNECTIONS")
 
-  val total = 1 until Network.size toList
-  val frAmount = (Network.size * frPercentage).toInt
-  val freeRiders = Random.shuffle(total).take(frAmount)
-  var altruistics = total diff freeRiders
+  val total = 1 until 1000 toList
+  val frAmount = (1000 * frPercentage).toInt
+  var freeRiders = Random.shuffle(total).take(frAmount)
+
+  val altruistics = total diff freeRiders
+
   var kicked = Map[Int, Int]()
   var badKicked = Map[Int, Int]()
   var maxHopInfo = 0
@@ -97,31 +98,6 @@ class Oracle {
 
   def allNodes = allNodesAux(0)
 
-  def nodesHpvProtocolExceptStreamer: List[(Usernode, HyParViewJoinTest)] = {
-    nodesHpvProtocol(allNodesExceptStreamer)
-  }
-
-  def nodesHpvProtocol: List[(Usernode, HyParViewJoinTest)] =
-    nodesHpvProtocol(Oracle.allNodes)
-
-  def nodesHpvProtocol(nodes: List[Usernode]): List[(Usernode, HyParViewJoinTest)] = {
-    nodes map {
-      node =>
-        node.getProtocol(HyParViewJoinTest.protocolID) match {
-          case prot: HyParViewJoinTest => (node, prot)
-        }
-    } toList
-  }
-
-  def nodesHpvProtocols(nodes: List[Int]): List[(Usernode, HyParViewJoinTest)] = {
-    nodesHpvProtocol(nodes map {
-      node => Oracle.getNode(node)
-    })
-  }
-
-  def nodeHpvProtocol(id: Int): (Usernode, HyParViewJoinTest) = {
-    nodesHpvProtocol(List(getNode(id))).head
-  }
 
   def getLinkable(usernode: Usernode): Link =
     usernode.getProtocol(FastConfig.getLinkable(0)) match {
@@ -136,56 +112,51 @@ class Oracle {
     }
   }
 
-  var simpleJoins = 0
+  def injectFreeRiders = {
+    val amount = 300
+    freeRiders = Random.shuffle(1 until 1000 toList).take(amount)
+
+    allNodesExceptStreamer filter (node => freeRiders.contains(node.getID)) map {
+      x => x.setProtocol(0, new FRProtocol("free rider injected"))
+    }
+  }
+
+  def addNode = {
+    if (freeRiders contains (currentPackage + 1)) {
+      addAltruisticNode
+    } else {
+      addAltruisticNode
+    }
+  }
+
   def addAltruisticNode = {
-    
+    addNodeAux(new AltruisticProtocol("altruistic"))
+  }
+
+  def addFreeRider {
+    addNodeAux(new FRProtocol("free rider"))
+  }
+
+  private def addNodeAux(protocol: GeneralProtocol) {
     val n = new Usernode("a")
     Network.add(n)
-    
-    val node = Oracle.getNode(n.getID.toInt)
-    node.setProtocol(0, new AltruisticProtocol("Altruistic Protocol"))
 
+    val node = Oracle.getNode(n.getID.toInt)
+    node.setProtocol(0, protocol)
     val nodeID = node.getID.toInt
     val nodeNode = Network.get(nodeID)
 
-    //nodesHpvProtocol(nodeID)._2.setMyNode(nodeNode, getViewSize(node))
-
-    for (id <- 0 until HyParViewJoinTest.activeViewSize) {      
-      simpleJoins += 1     
-      //val streamerHpv = Oracle.nodeHpvProtocol(Random.nextInt(Network.size))
-      //streamerHpv._2.simpleJoin(nodeNode, HyParViewJoinTest.protocolID, true)
-      
+    for (id <- 0 until Oracle.MIN_WIN_TO_SEARCH) {
       val connect = Oracle.getNode(Random.nextInt(Network.size))
       val lst = (1 until Network.size toList).diff(List(nodeID)).diff(node.scoreList.keySet toList)
-      
+
       lst match {
         case Nil => None
         case x => MyHyParView.join(Oracle.getNode(Random.shuffle(x).head), node)
       }
     }
-    
-    /*
-    val prot = Oracle.nodeHpvProtocol(node.getID.toInt)._2.neighbors
-    node.initializeScoreList(prot.toSeq map (x => x.getID))
-    prot map {
-      x =>
-        val unLink = Oracle.getLinkable(node)
-        //unLink.addNeighbor(Network.get(0))
-        unLink.addNeighbor(x)
-        println("un lik0" + unLink)
-        node.addChallenge(Oracle.getNode(x.getID.toInt))
-        Oracle.getNode(x.getID.toInt).addWaitingConfirm(node.getID.toInt)
 
-        Oracle.getLinkable(x.getID.toInt).addNeighbor(node)
-        x match {
-          case a: Usernode if a.getID != 0 => 
-            a.addToScoreList(node.getID)
-          case _ =>
-        }
-
-    }*/
-
-    altruistics = altruistics.::(node.getID.toInt)
+   // println(n.scoreList)
     
   }
 
@@ -198,7 +169,7 @@ class Oracle {
     if (Oracle.freeRiders contains un.getID.toInt) {
       RACIONAL_MAX_CONNECTIONS
     } else {
-      HyParViewJoinTest.activeViewSize
+      Oracle.MIN_WIN_TO_SEARCH
     }
   }
 

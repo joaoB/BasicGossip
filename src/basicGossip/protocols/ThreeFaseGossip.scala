@@ -13,7 +13,7 @@ import scala.util.Random
 class ThreeFaseGossip(name: String) extends AltruisticProtocol(name) {
 
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
-    Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size < Oracle.minWindow && un.solvingChallenges.size == 0
+    un.scoreList.size < Oracle.MIN_WIN_TO_SEARCH
   }
 
   override def processEvent(node: Node, pid: Int, event: Object) = {

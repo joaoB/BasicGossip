@@ -1,14 +1,11 @@
 package basicGossip.observers
 
-import basicGossip.node.Usernode
+import scala.annotation.migration
+
+import basicGossip.node.NodeStatus
+import basicGossip.oracle.Oracle
 import basicGossip.protocols.BasicGossip
 import peersim.core.Network
-import peersim.config.FastConfig
-import peersim.core.Linkable
-import hyparview.HyParViewJoinTest
-import basicGossip.protocols.Link
-import basicGossip.oracle.Oracle
-import basicGossip.node.NodeStatus
 
 class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
@@ -16,10 +13,9 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //dumpAvgReliability
     //reliabilityAbovePercentage
     //dumpNodesWithZeroMessages
-    //altruisticReliability
+    altruisticReliability
     //freeriderReliability
-    //dumpFreeRiders
-    //    newNodesReliability
+    //newNodesReliability
     // dumpScores
     //simulationData
     //dumpReliability
@@ -32,44 +28,60 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //altReliLastRounds
     //falsePos
     //printScore
-    disconnects
+    //disconnects
     //isolatedNodes
+    //ninja
     false
+  }
+
+
+  def ninja = {
+    println(Oracle.currentPackage + " -> " + "num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))
+
   }
 
   def disconnects = {
     println("disconnects " + Oracle.disconnects)
   }
-  
+
   def isolatedNodes = {
     val isolatedNodes = Oracle.allNodesExceptStreamer filter {
       un => un.scoreList.keySet.filter(_ != 0).toList.diff(Oracle.freeRiders).isEmpty
 
     }
 
-    println("alt puzzles " + Oracle.altruisticChallanges)
+    val isolatedFR = isolatedNodes filter (x => Oracle.freeRiders.contains(x.getID))
+
+    // println("alt puzzles " + Oracle.altruisticChallanges)
+    println("cycle " + Oracle.currentPackage)
+    println("isolated FR percentage: " + isolatedFR.size.toFloat / Oracle.frAmount)
     println("isolated nodes: " + isolatedNodes.size)
-    val a = isolatedNodes.sortBy { x => x.scoreList.size }
+    /* val a = isolatedNodes.sortBy { x => x.scoreList.size }
     val sorted = a map (_.scoreList.size)
     val nodesIds = a map (_.getID)
     println("isolated nodes ids -> " + a)
-    println("isolated nodes MIN connections: " + sorted.reduceOption(_ min _))
+    println("isolated nodes MIN connections: " + sorted.reduceOption(_ min _))*/
   }
 
   def printScore = {
+    println("-----------------------------------")
     try {
       val score = Oracle.getNode(1).scoreList.filter(_._2.status == NodeStatus.ACTIVE) map {
         a =>
           val score = a
-          print(a._1 + " > " + a._2.score +  " || \t")
+          print(a._1 + " > " + a._2.score + " || \t")
       }
       println
     } catch {
       case e: Throwable =>
     }
+    println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
   }
 
-  def falsePos = println(Oracle.badKicked.size)
+  def falsePos = {
+    print(Oracle.currentPackage + " -> ")
+    println(Oracle.badKicked.values.sum.toFloat / 1000)
+  }
 
   def altReliLastRounds = {
     val percentages = Oracle.altruistics map {
@@ -83,10 +95,9 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
   }
 
   def d = {
-    val a = Oracle.altruistics map {
+    val a = Oracle.altruistics.filter(_ < Network.size) map {
       id =>
         val a = Oracle.getNode(id).scoreList.filter(elem => Oracle.altruistics.contains(elem._1))
-        //println(a.size.toFloat  + " -> " + Oracle.getNode(id).scoreList.size.toFloat)
         a.size.toFloat / Oracle.getNode(id).scoreList.size
     }
     val b = a.filter(!_.isNaN())
@@ -97,13 +108,6 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
   def c = {
     println("false positives : " + Oracle.badKicked.size)
 
-    val nebas = Oracle.nodesHpvProtocol map {
-      x =>
-        //println(x._2.neighbors.map(_.getID) toList)
-        x._2.neighbors.map(_.getID).size
-    }
-
-    println("nebas " + nebas.sum)
     println("challengesBeforeStream -> " + Oracle.challengesBeforeStream)
     println("disconnectsBeforeStream -> " + Oracle.disconnectsBeforeStream)
 
@@ -373,7 +377,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     }
     //println("Amount of nodes with 0%: " + isolatedNodes.size)
 
-    val protocolList = Oracle.nodesHpvProtocolExceptStreamer map (_._2)
+    //val protocolList = Oracle.nodesHpvProtocolExceptStreamer map (_._2)
 
     val c = Oracle.freeRiders map {
       node =>
@@ -526,82 +530,67 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
   }
 
   def dumpConnections = {
-    Oracle.nodesHpvProtocol.map {
-      elems =>
-        print("Node: " + elems._1.getID + " -> ")
-        val a = elems._2.neighbors
-        a.map(x => print(x.getID + " "))
-        println
-    }
+    //    Oracle.nodesHpvProtocol.map {
+    //      elems =>
+    //        print("Node: " + elems._1.getID + " -> ")
+    //        val a = elems._2.neighbors
+    //        a.map(x => print(x.getID + " "))
+    //        println
+    //    }
   }
 
   def altruisticReliability = {
 
-    //    try {
-    //      for (a <- 1000 until 1100)
-    //        println(Oracle.getNode(a).messageList.size.toFloat / 520)
-    //    } catch {
-    //      case x =>
-    //    }
+    val a = Oracle.allNodesExceptStreamer map {
+      node => node.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size
+    }
+    try {
+    println("max connections " + a.max)  
+    println("min connections " + a.min)
+    }
+    catch {
+      case e :Throwable => 
+    }
 
-    val percentages = Oracle.altruistics map {
+    
+    val percentages = Oracle.altruistics.filter(x => x < Network.size && x < 1000) map {
       id =>
-        //    (Oracle.getNode(id).messageList.count(_.isDefined)).toFloat / BasicGossip.cycles
         Oracle.getNode(id).messageList.size.toFloat / BasicGossip.cycles
     }
 
-    val last1 = Oracle.altruistics map {
-      id =>
-        //    (Oracle.getNode(id).messageList.count(_.isDefined)).toFloat / BasicGossip.cycles
-        Oracle.getNode(id).messageList.filter(_ > BasicGossip.cycles - 1000).size.toFloat / 1000
-    }
-
-    val last = Oracle.altruistics map {
-      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 500).size.toFloat / 500
+    val last = Oracle.altruistics.filter(x => x < Network.size && x < 1000) map {
+      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 1000).size.toFloat / 1000
     }
 
     println("false positives : " + Oracle.badKicked.size)
-    println("false positives 2: " + Oracle.badKicked.filter(_._2 > 1).size)
-    println("num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))
+    println(Oracle.badKicked)
 
-    println("Reliability1: " + percentages.sum / percentages.size)
-
-    //    println("Reliability of altruistics (0 - 10%): " + percentages.filter(x => x >= 0 && x < 0.1).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (10 - 20%): " + percentages.filter(x => x >= 0.1 && x < 0.2).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (20 - 30%): " + percentages.filter(x => x >= 0.2 && x < 0.3).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (30 - 40%): " + percentages.filter(x => x >= 0.3 && x < 0.4).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (40 - 50%): " + percentages.filter(x => x >= 0.4 && x < 0.5).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (50 - 60%): " + percentages.filter(x => x >= 0.5 && x < 0.6).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (60 - 70%): " + percentages.filter(x => x >= 0.6 && x < 0.7).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (70 - 80%): " + percentages.filter(x => x >= 0.7 && x < 0.8).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (80 - 90%): " + percentages.filter(x => x >= 0.8 && x < 0.9).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (90 - 100%): " + percentages.filter(x => x >= 0.9 && x < 1).size.toFloat / Oracle.altruistics.size)
+    //println("Reliability1: " + percentages.sum / percentages.size)
 
     println("Reliability of altruistics (>0.80%): " + percentages.filter(_ > 0.8).size.toFloat / Oracle.altruistics.size)
     println("Reliability of altruistics (>0.90%): " + percentages.filter(_ > 0.9).size.toFloat / Oracle.altruistics.size)
     println("Reliability of altruistics (>0.95%): " + percentages.filter(_ > 0.95).size.toFloat / Oracle.altruistics.size)
     println("Reliability of altruistics (>0.98%): " + percentages.filter(_ > 0.98).size.toFloat / Oracle.altruistics.size)
 
-    //    println("Reliability of altruistics (0 - 10%) LAST: " + last.filter(x => x >= 0 && x < 0.1).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (10 - 20%) LAST: " + last.filter(x => x >= 0.1 && x < 0.2).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (20 - 30%) LAST: " + last.filter(x => x >= 0.2 && x < 0.3).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (30 - 40%) LAST: " + last.filter(x => x >= 0.3 && x < 0.4).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (40 - 50%) LAST: " + last.filter(x => x >= 0.4 && x < 0.5).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (50 - 60%) LAST: " + last.filter(x => x >= 0.5 && x < 0.6).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (60 - 70%) LAST: " + last.filter(x => x >= 0.6 && x < 0.7).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (70 - 80%) LAST: " + last.filter(x => x >= 0.7 && x < 0.8).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (80 - 90%) LAST: " + last.filter(x => x >= 0.8 && x < 0.9).size.toFloat / Oracle.altruistics.size)
-    //    println("Reliability of altruistics (90 - 100%) LAST: " + last.filter(x => x >= 0.9 && x <= 1).size.toFloat / Oracle.altruistics.size)
+    println("Reliability of altruistics (>0.90%): (last 10000 rounds)" + last.filter(_ > 0.9).size.toFloat / Oracle.altruistics.size)
+    println("Reliability of altruistics (>0.95%): (last 10000 rounds)" + last.filter(_ > 0.95).size.toFloat / Oracle.altruistics.size)
+    println("Reliability of altruistics (>0.98%): (last 10000 rounds)" + last.filter(_ > 0.98).size.toFloat / Oracle.altruistics.size)
 
-    println("Reliability of altruistics (>0.90%): (last 500 rounds)" + last.filter(_ > 0.9).size.toFloat / Oracle.altruistics.size)
-    println("Reliability of altruistics (>0.95%): (last 500 rounds)" + last.filter(_ > 0.95).size.toFloat / Oracle.altruistics.size)
-    println("Reliability of altruistics (>0.98%): (last 500 rounds)" + last.filter(_ > 0.98).size.toFloat / Oracle.altruistics.size)
+    //NEW NODES RELI
+    try {
+      val a = for (id <- 1000 until 1100) yield Oracle.getNode(id).messageList.size.toFloat / BasicGossip.cycles
+      println("new comers reli " + a.sum / a.size)
+      val b = for (id <- 1000 until 1100) yield Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 5000).size.toFloat / 5000
+      println("new comers reli 2nd half" + b.sum / b.size)
+    } catch {
+      case e: Throwable =>
+    }
   }
 
   def freeriderReliability = {
     println("    num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))
 
-    val percentages = Oracle.freeRiders map {
+    val percentages = Oracle.freeRiders.filter(_ < Network.size) map {
       x => Oracle.getNode(x).messageList.size.toFloat / BasicGossip.cycles
     }
 
@@ -616,7 +605,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //    println("Reliability of free riders (80 - 90%): " + percentages.filter(x => x >= 0.8 && x < 0.9).size.toFloat / Oracle.altruistics.size)
     //    println("Reliability of free riders (90 - 100%): " + percentages.filter(x => x >= 0.9 && x <= 1).size.toFloat / Oracle.altruistics.size)
 
-    val FRpercentages = Oracle.freeRiders map {
+    val FRpercentages = Oracle.freeRiders.filter(_ < Network.size) map {
       x => Oracle.getNode(x).messageList.size.toFloat / BasicGossip.cycles
     }
 
@@ -657,22 +646,6 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
   }
 
   def dumpFreeRiders = {
-
-    /* Oracle.allNodes map {
-      node =>
-        print("Node " + node.getID + "-> ")
-        node.scoreList map {
-          x => print(x._1 + " ")
-        }
-        println
-        
-        
-
-    }*/
-
-    //    Oracle.allNodesExceptStreamer map {
-    //      elem => println(elem)
-    //    }
 
   }
 
@@ -749,7 +722,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       case node if !node.dumpFreeRiders.isEmpty => 
         print("Node " + node.getID + "-> ")
         node.dumpFreeRiders map {
-          x => print(x + " "))
+          x => print(x + " ")))
         }
         println
       case _ =>

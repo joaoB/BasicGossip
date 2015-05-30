@@ -18,9 +18,10 @@ class RationalProtocol(name: String) extends GeneralProtocol {
     val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
     un.scoreList = un.scoreList.updated(nid, neigh)
   }
+  
   override def canAcceptNewNeighbor(un: Usernode) = {
-    un.solvingChallenges.size == 0
-    
+    true
+
   }
 
   override def computeFanout(gossiper: Usernode, sender: Node): Set[Long] = {

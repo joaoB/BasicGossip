@@ -13,14 +13,13 @@ class Test(name: String) extends Control {
     //scoreSize
     //onlyOneInSolving
     //bidirectionalHpv
-    // solvingChallenges
+    //solvingChallenges
     //oneActive
     //puzzlesAmount
     false
   }
-
   
-  def puzzlesAmount = {
+  /*def puzzlesAmount = {
     val allPuzzles = Oracle.allNodesExceptStreamer map {
       node => node.solvingChallenges.size
     }
@@ -40,7 +39,7 @@ class Test(name: String) extends Control {
         }
     }
 
-  }
+  } */
 
   def oneActive = {
     Oracle.allNodesExceptStreamer map {
@@ -61,40 +60,24 @@ class Test(name: String) extends Control {
         if (node.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size > 15) {
           println("BUGGGGGGGGGGGGGG @ Test.scoreSize")
           println("NODE: " + node.getID + " score size " + node.scoreList.size)
+          println(node.scoreList)
         }
     }
 
   }
 
-  def solvingChallenges = {
-    Oracle.allNodesExceptStreamer map {
-      node =>
-        val puzzles = node.solvingChallenges
-        if (puzzles.size > 1) {
-          println("BUGGGGGGGGGGGGGG @ Test.solvingChallenges")
-          println("Node : " + node.getID + " -> solving " + puzzles.size + " challenges")
-          println(puzzles.map(_.sender.getID).toList)
-          println("is free rider? " + Oracle.freeRiders.contains(node.getID))
-        }
-    }
-  }
-
-  def bidirectionalHpv = {
-    Oracle.nodesHpvProtocolExceptStreamer map {
-      node =>
-        node._2.neighbors.filter(_ != 0) map {
-          id =>
-            if (!Oracle.nodeHpvProtocol(id.getID.toInt)._2.neighbors.contains(Network.get(node._1.getID.toInt))) {
-              println("BUGGGGGGGGGGGGGG @ Test.bidirectionalHpv")
-              val a = Oracle.nodeHpvProtocol(id.getID.toInt)._2.neighbors.map(_.getID)
-              val b = node._2.neighbors.map(_.getID)
-              println("Node : " + id.getID + " -> " + a.toList)
-              println("Node : " + node._1.getID + " -> " + b.toList)
-            }
-        }
-        1
-    }
-  }
+//  def solvingChallenges = {
+//    Oracle.allNodesExceptStreamer map {
+//      node =>
+//        val puzzles = node.solvingChallenges
+//        if (puzzles.size > 1) {
+//          println("BUGGGGGGGGGGGGGG @ Test.solvingChallenges")
+//          println("Node : " + node.getID + " -> solving " + puzzles.size + " challenges")
+//          println(puzzles.map(_.sender.getID).toList)
+//          println("is free rider? " + Oracle.freeRiders.contains(node.getID))
+//        }
+//    }
+//  }
 
   def bidirectionalScore = {
     Oracle.allNodesExceptStreamer map {

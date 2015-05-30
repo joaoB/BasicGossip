@@ -8,11 +8,11 @@ import basicGossip.node.Usernode
 import basicGossip.messages.ConfirmSolveChallenge
 import peersim.config.FastConfig
 import peersim.edsim.EDProtocol
+import basicGossip.node.NodeStatus
 
 class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
 
   def nextCycle(node: Node, pid: Int) {
-
     val un = Oracle.getNode(node.getID.toInt)
     un.solveChallenge
 
@@ -21,30 +21,34 @@ class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
 
   }
 
-  private def solveOne(un: Usernode) {
-    un.solvingChallenges.filter { x => x.remainingCycles <= 0 } map {
-      elem =>
-        elem.sender.receivedSolvedChallenge(un)
-    }
-    un.cleanSolvedChallenges
-  }
+  //  private def solveOne(un: Usernode) {
+  //    un.solvingChallenges.filter { x => x.remainingCycles <= 0 } map {
+  //      elem =>
+  //        elem.sender.receivedSolvedChallenge(un)
+  //    }
+  //    un.cleanSolvedChallenges
+  //  }
 
   private def solveAll(un: Usernode) {
-    if (!un.solvingChallenges.exists { x => x.remainingCycles > 0 } &&
-      un.solvingChallenges.size > 0) {
-
-      un.solvingChallenges map {
+    val solving = un.scoreList.filter(_._2.status == NodeStatus.SOLVING)
+    if (!solving.exists { x => x._2.score > 0 } &&
+      solving.size > 0) {
+      solving map {
         elem =>
-          elem.sender.receivedSolvedChallenge(un)
+          val node = Oracle.getNode(elem._1.toInt)
+          node.receivedSolvedChallenge(un)
       }
-      un.cleanSolvedChallenges
+      //un.cleanSolvedChallenges
     }
   }
+
   def processEvent(node: Node, pid: Int, event: Object) {
-    event match {
-      case challenge: ConfirmSolveChallenge => Oracle.getNode(node.getID.toInt).receivedSolvedChallenge(challenge.sender)
-      case _ =>
-    }
+    //    event match {
+    //      case challenge: ConfirmSolveChallenge => 
+    //        println("----------------------------")
+    //        Oracle.getNode(node.getID.toInt).receivedSolvedChallenge(challenge.sender)
+    //      case _ =>
+    //    }
 
   }
 
