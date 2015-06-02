@@ -13,6 +13,9 @@ import basicGossip.messages.ConfirmSolveChallenge
 
 trait GeneralProtocol extends CDProtocol with EDProtocol {
 
+  val baseWin: Int
+  val maxWin: Int
+  
   val maxHops = Oracle.maxHops
 
   def nextCycle(node: Node, pid: Int) {}

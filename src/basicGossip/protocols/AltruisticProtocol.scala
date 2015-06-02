@@ -4,13 +4,15 @@ import basicGossip.node.Neighbor
 import basicGossip.node.NodeStatus
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
-import hyparview.HyParViewJoinTest
 import peersim.core.Node
 
 class AltruisticProtocol(name: String) extends GeneralProtocol {
 
+  override val baseWin = Oracle.MIN_WIN_TO_SEARCH
+  override val maxWin = 15
+  
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
-    Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size <= Oracle.MIN_WIN_TO_SEARCH
+    un.scoreList.size < Oracle.MIN_WIN_TO_SEARCH
   }
 
   override def computeFanout(gossiper: Usernode, sender: Node): Set[Long] = {
@@ -33,8 +35,7 @@ class AltruisticProtocol(name: String) extends GeneralProtocol {
   }
 
   override def canAcceptNewNeighbor(un: Usernode) =
-    un.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size < 15
-    //Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size <= HyParViewJoinTest.activeViewSize
+    un.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size < maxWin
 
   override def addToScoreList(un: Usernode, nid: Long) {
     val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)

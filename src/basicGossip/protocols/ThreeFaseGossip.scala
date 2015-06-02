@@ -13,7 +13,8 @@ import scala.util.Random
 class ThreeFaseGossip(name: String) extends AltruisticProtocol(name) {
 
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
-    Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size < Oracle.minWindow && un.solvingChallenges.size == 0
+    //Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.size < Oracle.minWindow && un.solvingChallenges.size == 0
+    true
   }
 
   override def processEvent(node: Node, pid: Int, event: Object) = {
@@ -78,7 +79,7 @@ class ThreeFaseGossip(name: String) extends AltruisticProtocol(name) {
     request.ids map {
       id =>
         node.messageList.contains(id) match {
-          case /*Some(info)*/ true => serveRequest(node, request.sender, Info(id, request.sender, 0), pid)
+          case /*Some(info)*/ true => //serveRequest(node, request.sender, Info(id, request.sender, 0), pid)
           case _ => println("some guy requested something that he was not proposed") //some guy requested something that he was not proposed
         }
     }
@@ -107,17 +108,17 @@ class ThreeFaseGossip(name: String) extends AltruisticProtocol(name) {
     trans.send(node, peern, request, pid)
   }
 
-  def serveRequest(sender: Usernode, receiver: Usernode, info: Info, pid: Int) {
-    val linkable = sender.getProtocol(FastConfig.getLinkable(pid))
-    linkable match {
-      case link: Link =>
-        val peern = link.getNeighborById(receiver.getID) match {
-          case Some(peern) if peern.isUp =>
-            sendInfo(sender, peern, Info(info.value, sender, info.hop + 1), pid)
-          case _ =>
-        }
-
-    }
-  }
+//  def serveRequest(sender: Usernode, receiver: Usernode, info: Info, pid: Int) {
+//    val linkable = sender.getProtocol(FastConfig.getLinkable(pid))
+//    linkable match {
+//      case link: Link =>
+//        val peern = link.getNeighborById(receiver.getID) match {
+//          case Some(peern) if peern.isUp =>
+//            sendInfo(sender, peern, Info(info.value, sender, info.hop + 1), pid)
+//          case _ =>
+//        }
+//
+//    }
+//  }
 
 }

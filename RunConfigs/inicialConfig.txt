@@ -7,7 +7,7 @@ Oracle.MIN_WINDOW_TO_SEARCH 12
 Usernode.SCORE_DELTA 1
 Oracle.FR_THRESHOLD -15
 Oracle.FR_PERCENTAGE 0
-Oracle.QUARANTINE 105
+Oracle.QUARANTINE 220
 Oracle.RACIONAL_MAX_CONNECTIONS 12
 
 Oracle.FORWARD_PROBABILITY 0.4
@@ -15,7 +15,7 @@ Oracle.REDUNDANCY_FACTOR 0
 Oracle.INITIALIZE_SCORE 0
 # parameters of periodic execution
 
-CYCLES 8000
+CYCLES 10000
 CYCLE SIZE*10000
 
 # parameters of message transfer
@@ -41,8 +41,8 @@ protocol.avg.linkable link
 protocol.avg.step CYCLE
 protocol.avg.transport tr
 
-protocol.view hyparview.HyParViewJoinTest
-protocol.view.step CYCLE
+#protocol.view hyparview.HyParViewJoinTest
+#protocol.view.step CYCLE
 
 protocol.urt UniformRandomTransport
 protocol.urt.mindelay (CYCLE*MINDELAY)/100

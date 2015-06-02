@@ -3,11 +3,12 @@ package basicGossip.protocols
 import peersim.cdsim.CDProtocol
 import peersim.core.Node
 import basicGossip.node.Usernode
-import hyparview.HyParViewJoinTest
 import basicGossip.oracle.Oracle
 import peersim.core.Network
 import peersim.edsim.EDProtocol
 import scala.util.Random
+import hyparview.MyHyParView
+import basicGossip.node.NodeStatus
 
 class SearchNewNeighbor(name: String) extends CDProtocol {
 
@@ -27,37 +28,21 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
 
     kickFreeRiders(un)
 
-    /*
-    if (un.shouldLookForNewNeighbor) {
- 
-      Oracle.nodeHpvProtocol(neighID)._2.setMyNode(Network.get(neighID), Oracle.getViewSize(Oracle.getNode(neighID)))
-      Oracle.nodeHpvProtocol(neighID)._2.simpleJoin(un, HyParViewJoinTest.protocolID)
-
-      val challenges = un.solvingChallenges map (_.sender.getID)
-
-      //val a = (Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.toList.map(_.getID).groupBy(identity).collect { case (x, ys) if ys.size > 1 => x })
-      val a = ((Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors.toList.map(_.getID).diff(un.scoreList.map(_._1).toList))).diff(challenges)
-      
-      a diff un.waitingConfirm map {
-        newMember =>
-          //println("Node: " + un.getID + " try to connect to " + newMember)
-          if (Oracle.getNode(newMember.toInt).canAcceptNewNeighbor
-            && un.addChallenge(Oracle.getNode(newMember.toInt))) {
-            if (Oracle.freeRiders contains un.getID) {
-              //println("adding")
-              Oracle.FRchallenges += 1
-            } else {
-              Oracle.altruisticChallanges += 1
-            }
-
-            Oracle.getNode(newMember.toInt).addWaitingConfirm(un.getID.toInt)
-          } else {
-            Oracle.nodeHpvProtocol(newMember.toInt)._2.disconnect(un)
-            Oracle.nodeHpvProtocol(un.getID.toInt)._2.disconnect(Oracle.getNode(newMember.toInt))
-          }
-
+    /*if (un.scoreList.filter(x => x._2.status != NodeStatus.SOLVING).size > Oracle.MIN_WIN_TO_SEARCH) {
+      un.scoreList.filter(x => x._2.status == NodeStatus.SOLVING) map {
+        node =>
+          un.solvingChallenges = un.solvingChallenges.filter(_.sender.getID != node._1)
+          un.removeFromScoreList(node._1)
+          Oracle.getNode(node._1.toInt).removeFromScoreList(un.getID)
       }
-    } */
+    }*/
+    
+    val list = un.solvingChallenges.map(_.sender.getID).toList
+    val set = un.solvingChallenges.map(_.sender.getID).toSet
+
+    if (un.shouldLookForNewNeighbor) {
+      MyHyParView.join(un)
+    }
   }
 
   def kickFreeRiders(un: Usernode): Boolean = {
@@ -65,14 +50,6 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
     val frs = un.freeRiders
     val link = Oracle.getLinkable(un)
     if (un.freeRiders.size > 0) {
-
-      //      if (un.freeRiders contains Oracle.freeRiders.head) {
-      //        println("Node: " + un.getID + " will kick free rider")
-      //        val a = un.scoreList(Oracle.freeRiders.head)
-      //        println ("score: " + a)
-      //        println("FR -> kicker " + Oracle.getNode(Oracle.freeRiders.head).scoreList(un.getIndex))
-      //      }
-
       frs map {
         fr =>
           if (Oracle.freeRiders.contains(fr))
@@ -82,23 +59,6 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
 
           un.removeFromScoreList(fr)
           Oracle.getNode(fr.toInt).removeFromScoreList(un.getID)
-
-          Oracle.getLinkable(fr.toInt).removeNeighbor(un)
-          link.removeNeighbor(Oracle.getNode(fr.toInt))
-
-          //          println("---------------------------------")
-          val a = Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors().map(_.getID).toList
-          val b = Oracle.nodeHpvProtocol(fr.toInt)._2.neighbors().map(_.getID).toList
-          //          println("NODE : " + un.getID + " -> " + a + " SIZE -> " + a.size)
-          //          println("NODE : " + fr.toInt + " -> " + b + " SIZE -> " + b.size)
-
-          Oracle.nodeHpvProtocol(un.getID.toInt)._2.disconnect(Network.get(fr.toInt))
-          Oracle.nodeHpvProtocol(fr.toInt)._2.disconnect(Network.get(un.getID.toInt))
-
-          val c = Oracle.nodeHpvProtocol(un.getID.toInt)._2.neighbors().map(_.getID).toList
-          val d = Oracle.nodeHpvProtocol(fr.toInt)._2.neighbors().map(_.getID).toList
-        //          println("NODE : " + un.getID + " -> " + c + " SIZE -> " + c.size)
-        //          println("NODE : " + fr.toInt + " -> " + d + " SIZE -> " + d.size)
       }
       false
     }

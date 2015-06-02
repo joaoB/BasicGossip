@@ -13,20 +13,79 @@ class Test(name: String) extends Control {
     //scoreSize
     //onlyOneInSolving
     //bidirectionalHpv
-    // solvingChallenges
+    //solvingChallenges
     //oneActive
     //puzzlesAmount
+    //solveNwaiting
+    //solving
     false
   }
 
-  
-  def puzzlesAmount = {
-    val allPuzzles = Oracle.allNodesExceptStreamer map {
-      node => node.solvingChallenges.size
+  def solving {
+    Oracle.allNodesExceptStreamer map {
+      node =>
+        val solvingIds = node.solvingChallenges.map { x => x.sender.getID } map {
+          key =>
+            if (!node.scoreList.filter(_._2.status == NodeStatus.SOLVING).map(_._1).toList.contains(key)) {
+              println("BUGGGG SOLVING LIST DOES NOT MATCH SCORELIST SOLVING")
+            }
+        }
     }
-    println(Oracle.currentPackage + " -> " + allPuzzles.sum)
   }
-  
+
+  def solveNwaiting = {
+    val allPuzzles = Oracle.allNodesExceptStreamer map {
+      node =>
+        val sender = node.solvingChallenges.map(_.sender)
+        sender map {
+          x =>
+            if (!x.scoreList.filter(_._2.status == NodeStatus.WAITING).contains(node.getID)) {
+              println("SOLVING WITHOUT WAITING")
+              println("node: " + node.getID + " solving " + sender.map(_.getID))
+              println("node: " + x.getID + " waiting " + x.scoreList.filter(_._2.status == NodeStatus.WAITING))
+            }
+        }
+    }
+  }
+
+  def puzzlesAmount = {
+    //    Oracle.allNodesExceptStreamer map {
+    //      node => 
+    //        val a = node.solvingChallenges.map(_.sender.getID) toList
+    //        val b = node.solvingChallenges.map(_.sender.getID) toSet
+    //        
+    //        if (a.size != b.size){
+    //          println("ashduahdusahdu")
+    //        }
+    //    }
+
+    try {
+      val size = for (id <- 1000 until 1100) yield Oracle.getNode(id).solvingChallenges.size
+
+      println("NEW SOLVING " + size.sum)
+      
+    } catch {
+      case e: Throwable =>
+    }
+
+    val allPuzzles = Oracle.allNodesExceptStreamer map {
+      node =>
+        val a = node.solvingChallenges.size
+        a
+    }
+    println(Oracle.currentPackage + " -> " + allPuzzles.sum.toFloat / Network.size)
+
+    try {
+      println("max puzzles size " + allPuzzles.max)
+
+      //      println("MAX " + a.max)
+      //
+      //      println("MIN " + a.min)
+    } catch {
+      case e: Throwable=>
+    }
+  }
+
   def onlyOneInSolving = {
     Oracle.allNodesExceptStreamer map {
       node =>
@@ -76,23 +135,6 @@ class Test(name: String) extends Control {
           println(puzzles.map(_.sender.getID).toList)
           println("is free rider? " + Oracle.freeRiders.contains(node.getID))
         }
-    }
-  }
-
-  def bidirectionalHpv = {
-    Oracle.nodesHpvProtocolExceptStreamer map {
-      node =>
-        node._2.neighbors.filter(_ != 0) map {
-          id =>
-            if (!Oracle.nodeHpvProtocol(id.getID.toInt)._2.neighbors.contains(Network.get(node._1.getID.toInt))) {
-              println("BUGGGGGGGGGGGGGG @ Test.bidirectionalHpv")
-              val a = Oracle.nodeHpvProtocol(id.getID.toInt)._2.neighbors.map(_.getID)
-              val b = node._2.neighbors.map(_.getID)
-              println("Node : " + id.getID + " -> " + a.toList)
-              println("Node : " + node._1.getID + " -> " + b.toList)
-            }
-        }
-        1
     }
   }
 

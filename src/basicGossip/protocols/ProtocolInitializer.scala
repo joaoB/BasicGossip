@@ -2,7 +2,6 @@ package basicGossip.protocols
 
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
-import hyparview.HyParViewJoinTest
 import peersim.config.Configuration
 import peersim.core.Control
 import peersim.core.IdleProtocol
@@ -53,17 +52,17 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
   def initializeViews = {
     //hyparview initialization
 
-    Oracle.nodesHpvProtocol map {
-      case (un: Usernode, prot: HyParViewJoinTest) =>
-        prot.setMyNode(Network.get(un.getID.toInt), Oracle.getViewSize(un))
-    }
-
-    val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
-
-    Oracle.allNodesExceptStreamer map {
-      node => streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
-    }
-    rejoinIsolated()
+//    Oracle.nodesHpvProtocol map {
+//      case (un: Usernode, prot: HyParViewJoinTest) =>
+//        prot.setMyNode(Network.get(un.getID.toInt), Oracle.getViewSize(un))
+//    }
+//
+//    val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
+//
+//    Oracle.allNodesExceptStreamer map {
+//      node => streamerHpv._2.join(Network.get(node.getID.toInt), HyParViewJoinTest.protocolID)
+//    }
+//    rejoinIsolated()
 
     //    val maxN = 10
     //    for (id <- 1 to maxN) {
@@ -104,7 +103,7 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
 
     //println(Oracle.nodesHpvProtocol.filter(Oracle.freeRiders contains _._1.getID).head._2.neighbors().size)
 
-    globalHyParViewLinkage
+//    globalHyParViewLinkage
     
     //traditionalHyParViewLinkage
 
@@ -125,102 +124,102 @@ class ProtocolInitializer(name: String) extends Control with NodeInitializer {
     }*/
   }
 
-  private def rejoinIsolated(solve: Boolean = false) = {
-    def rejoinIsolatedAux: Boolean = {
-      val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
-      val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.minWindow) map {
-        a =>
-          streamerHpv._2.simpleJoin(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
-      }
-      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.minWindow)
-    }
-    while (rejoinIsolatedAux) {}
-  }
+//  private def rejoinIsolated(solve: Boolean = false) = {
+//    def rejoinIsolatedAux: Boolean = {
+//      val streamerHpv = Oracle.nodeHpvProtocol(streamerID)
+//      val a = Oracle.nodesHpvProtocolExceptStreamer.filter(x => x._2.neighbors.size < Oracle.minWindow) map {
+//        a =>
+//          streamerHpv._2.simpleJoin(Network.get(a._1.getID.toInt), HyParViewJoinTest.protocolID)
+//      }
+//      Oracle.nodesHpvProtocolExceptStreamer.exists(x => x._2.neighbors.size < Oracle.minWindow)
+//    }
+//    while (rejoinIsolatedAux) {}
+//  }
 
-  private def globalHyParViewLinkage = {
-    //streamer knows everybody
-    val streamer = Oracle.getNode(streamerID)
-    val streamerLink = Oracle.getLinkable(streamer)
-    Oracle.nodesHpvProtocolExceptStreamer map {
-      case (un: Usernode, prot: HyParViewJoinTest) =>
-        un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
-        prot.neighbors map {
-          neigh =>
-            val unLink = Oracle.getLinkable(un)
-            unLink.addNeighbor(Network.get(streamerID))
-            unLink.addNeighbor(neigh)
-            streamerLink.addNeighbor(un)
-        }
-    }
-/*
-    AvgReliability.c
-
-    println("---------------------------------------------------------------------")
-
-    for (id <- 0 until 100) {
-      Oracle.addAltruisticNode
-    }
-    AvgReliability.c
-    println("SIMPLE JOINS " + Oracle.simpleJoins)
-    val a = (for (id <- 1000 until 1100) yield Oracle.getNode(id).scoreList.size) toList
-      
-    println("SCORE LIST " + Oracle.getNode(1000).scoreList.keySet)
-    println("HPV " + Oracle.nodeHpvProtocol(1000)._2.neighbors().map(_.getID).toList)
-    println("MIN size  " + a.min)
-    println("MAX size " + a.max)
-    println("avg new comers score size " + a.sum / a.size)
-*/
-    /*
-    for (idRemove <- 1 to 300) {
-      Oracle.getNode(idRemove).setFailState(1)
-
-    }
-
-    for (id <- 301 to 999) {
-      for (idRemove <- 1 to 300) {
-        Oracle.getNode(id).removeFromScoreList(idRemove)
-        Oracle.nodeHpvProtocol(id)._2.disconnect(Network.get(idRemove))
-      }
-    }
-    var a = 0
-    for (id <- 301 to 999) {
-
-      var count = 0
-      
-
-      while (count < 90000 && Oracle.nodeHpvProtocol(id)._2.neighbors.size < Oracle.minWindow) {
-        count += 1
-
-        val c = Oracle.nodeHpvProtocol(id)._2.neighbors.size
-
-        Oracle.nodeHpvProtocol(0)._2.simpleJoin(Network.get(id), HyParViewJoinTest.protocolID)
-        val b = Oracle.nodeHpvProtocol(id)._2.neighbors.size
-
-        if (c != b) {
-          a += 1
-        }
-
-      }
-
-    }
-    val ww= 301 to 999 map(x => Oracle.getNode(x)) toList
-    val laura = Oracle.nodesHpvProtocol(ww) map {
-      x => x._2.neighbors().size
-    }
-    
-    println("larua min " + laura.min)
-    
-    println("A-> " + a)*/
-  }
-
-  private def traditionalHyParViewLinkage = {
-    Oracle.nodesHpvProtocol map {
-      case (un: Usernode, prot: HyParViewJoinTest) =>
-        un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
-        prot.neighbors map {
-          neigh => Oracle.getLinkable(un).addNeighbor(neigh)
-        }
-    }
-  }
+//  private def globalHyParViewLinkage = {
+//    //streamer knows everybody
+//    val streamer = Oracle.getNode(streamerID)
+//    val streamerLink = Oracle.getLinkable(streamer)
+//    Oracle.nodesHpvProtocolExceptStreamer map {
+//      case (un: Usernode, prot: HyParViewJoinTest) =>
+//        un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
+//        prot.neighbors map {
+//          neigh =>
+//            val unLink = Oracle.getLinkable(un)
+//            unLink.addNeighbor(Network.get(streamerID))
+//            unLink.addNeighbor(neigh)
+//            streamerLink.addNeighbor(un)
+//        }
+//    }
+///*
+//    AvgReliability.c
+//
+//    println("---------------------------------------------------------------------")
+//
+//    for (id <- 0 until 100) {
+//      Oracle.addAltruisticNode
+//    }
+//    AvgReliability.c
+//    println("SIMPLE JOINS " + Oracle.simpleJoins)
+//    val a = (for (id <- 1000 until 1100) yield Oracle.getNode(id).scoreList.size) toList
+//      
+//    println("SCORE LIST " + Oracle.getNode(1000).scoreList.keySet)
+//    println("HPV " + Oracle.nodeHpvProtocol(1000)._2.neighbors().map(_.getID).toList)
+//    println("MIN size  " + a.min)
+//    println("MAX size " + a.max)
+//    println("avg new comers score size " + a.sum / a.size)
+//*/
+//    /*
+//    for (idRemove <- 1 to 300) {
+//      Oracle.getNode(idRemove).setFailState(1)
+//
+//    }
+//
+//    for (id <- 301 to 999) {
+//      for (idRemove <- 1 to 300) {
+//        Oracle.getNode(id).removeFromScoreList(idRemove)
+//        Oracle.nodeHpvProtocol(id)._2.disconnect(Network.get(idRemove))
+//      }
+//    }
+//    var a = 0
+//    for (id <- 301 to 999) {
+//
+//      var count = 0
+//      
+//
+//      while (count < 90000 && Oracle.nodeHpvProtocol(id)._2.neighbors.size < Oracle.minWindow) {
+//        count += 1
+//
+//        val c = Oracle.nodeHpvProtocol(id)._2.neighbors.size
+//
+//        Oracle.nodeHpvProtocol(0)._2.simpleJoin(Network.get(id), HyParViewJoinTest.protocolID)
+//        val b = Oracle.nodeHpvProtocol(id)._2.neighbors.size
+//
+//        if (c != b) {
+//          a += 1
+//        }
+//
+//      }
+//
+//    }
+//    val ww= 301 to 999 map(x => Oracle.getNode(x)) toList
+//    val laura = Oracle.nodesHpvProtocol(ww) map {
+//      x => x._2.neighbors().size
+//    }
+//    
+//    println("larua min " + laura.min)
+//    
+//    println("A-> " + a)*/
+//  }
+//
+//  private def traditionalHyParViewLinkage = {
+//    Oracle.nodesHpvProtocol map {
+//      case (un: Usernode, prot: HyParViewJoinTest) =>
+//        un.initializeScoreList(prot.neighbors.toSeq map (x => x.getID))
+//        prot.neighbors map {
+//          neigh => Oracle.getLinkable(un).addNeighbor(neigh)
+//        }
+//    }
+//  }
 
 }

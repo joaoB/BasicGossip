@@ -5,7 +5,7 @@ import basicGossip.protocols.BasicGossip
 import peersim.core.Network
 import peersim.config.FastConfig
 import peersim.core.Linkable
-import hyparview.HyParViewJoinTest
+
 import basicGossip.protocols.Link
 import basicGossip.oracle.Oracle
 import basicGossip.node.NodeStatus
@@ -16,10 +16,10 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //dumpAvgReliability
     //reliabilityAbovePercentage
     //dumpNodesWithZeroMessages
-    //altruisticReliability
+    altruisticReliability
     //freeriderReliability
     //dumpFreeRiders
-    //    newNodesReliability
+    //newNodesReliability
     // dumpScores
     //simulationData
     //dumpReliability
@@ -32,15 +32,35 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //altReliLastRounds
     //falsePos
     //printScore
-    disconnects
+    //disconnects
     //isolatedNodes
+    //maxmin
     false
+  }
+
+  def maxmin = {
+    val a = Oracle.allNodesExceptStreamer map {
+      node =>
+        val asd = node.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size
+        //        if (asd > 15) {
+        //          println(node.scoreList)
+        //          println(node.solvingChallenges)
+        //        }
+        asd
+    }
+    try {
+      println("MAX " + a.max)
+
+      println("MIN " + a.min)
+    } catch {
+      case e =>
+    }
   }
 
   def disconnects = {
     println("disconnects " + Oracle.disconnects)
   }
-  
+
   def isolatedNodes = {
     val isolatedNodes = Oracle.allNodesExceptStreamer filter {
       un => un.scoreList.keySet.filter(_ != 0).toList.diff(Oracle.freeRiders).isEmpty
@@ -61,7 +81,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       val score = Oracle.getNode(1).scoreList.filter(_._2.status == NodeStatus.ACTIVE) map {
         a =>
           val score = a
-          print(a._1 + " > " + a._2.score +  " || \t")
+          print(a._1 + " > " + a._2.score + " || \t")
       }
       println
     } catch {
@@ -91,19 +111,12 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     }
     val b = a.filter(!_.isNaN())
 
-    println("A " + b.sum.toFloat / Oracle.altruistics.size)
+    println("A " + Oracle.currentPackage + " -> " + +b.sum.toFloat / Oracle.altruistics.size)
   }
 
   def c = {
     println("false positives : " + Oracle.badKicked.size)
 
-    val nebas = Oracle.nodesHpvProtocol map {
-      x =>
-        //println(x._2.neighbors.map(_.getID) toList)
-        x._2.neighbors.map(_.getID).size
-    }
-
-    println("nebas " + nebas.sum)
     println("challengesBeforeStream -> " + Oracle.challengesBeforeStream)
     println("disconnectsBeforeStream -> " + Oracle.disconnectsBeforeStream)
 
@@ -129,8 +142,6 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     println("fr crypto " + Oracle.FRchallenges)
     //println("fr score size " + Oracle.getNode(Oracle.freeRiders.head).scoreList.size)
     println("kicked " + Oracle.kicked)
-    println("alt: " + alt.sum / alt.size)
-    println("fr: " + fr.sum / fr.size)
 
     val aw = Oracle.altruistics.map({
       id => Oracle.getNode(id).scoreList.size
@@ -373,7 +384,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     }
     //println("Amount of nodes with 0%: " + isolatedNodes.size)
 
-    val protocolList = Oracle.nodesHpvProtocolExceptStreamer map (_._2)
+    //val protocolList = Oracle.nodesHpvProtocolExceptStreamer map (_._2)
 
     val c = Oracle.freeRiders map {
       node =>
@@ -525,24 +536,17 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
   }
 
-  def dumpConnections = {
-    Oracle.nodesHpvProtocol.map {
-      elems =>
-        print("Node: " + elems._1.getID + " -> ")
-        val a = elems._2.neighbors
-        a.map(x => print(x.getID + " "))
-        println
-    }
-  }
-
   def altruisticReliability = {
 
-    //    try {
-    //      for (a <- 1000 until 1100)
-    //        println(Oracle.getNode(a).messageList.size.toFloat / 520)
-    //    } catch {
-    //      case x =>
-    //    }
+    try {
+      val a = for (a <- 1000 until 1100) yield Oracle.getNode(a).messageList.filter(_ > 9000).size.toFloat / 1000
+
+      println("NEW " + a.sum.toFloat / a.size)
+    } catch {
+      case x =>
+    }
+
+    println("puzzles AFTER FREERIDERS" + Oracle.altruisticChallanges)
 
     val percentages = Oracle.altruistics map {
       id =>

@@ -8,6 +8,9 @@ import basicGossip.node.Usernode
 import basicGossip.messages.ConfirmSolveChallenge
 import peersim.config.FastConfig
 import peersim.edsim.EDProtocol
+import basicGossip.node.NodeStatus
+import scala.collection.mutable.MutableList
+import basicGossip.messages.WaitCycles
 
 class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
 
@@ -16,9 +19,24 @@ class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
     val un = Oracle.getNode(node.getID.toInt)
     un.solveChallenge
 
+    if (un.getID != 0)
+      cleanIfMore(un)
+    
     solveAll(un)
+
     //solveOne(un)
 
+  }
+
+  private def cleanIfMore(un: Usernode) {
+    if (!un.canAcceptNewNeighbor && !un.solvingChallenges.isEmpty) {
+      un.solvingChallenges map {
+        x =>
+          x.sender.removeFromScoreList(un.getID)
+          un.removeFromScoreList(x.sender.getID)
+      }
+      un.solvingChallenges.clear()
+    }
   }
 
   private def solveOne(un: Usernode) {
@@ -32,12 +50,12 @@ class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
   private def solveAll(un: Usernode) {
     if (!un.solvingChallenges.exists { x => x.remainingCycles > 0 } &&
       un.solvingChallenges.size > 0) {
-
       un.solvingChallenges map {
         elem =>
           elem.sender.receivedSolvedChallenge(un)
       }
       un.cleanSolvedChallenges
+
     }
   }
   def processEvent(node: Node, pid: Int, event: Object) {
