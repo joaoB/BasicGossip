@@ -19,40 +19,26 @@ class ChallengeSolver(name: String) extends CDProtocol with EDProtocol {
     val un = Oracle.getNode(node.getID.toInt)
     un.solveChallenge
 
-    if (un.getID != 0)
-      cleanIfMore(un)
-    
     solveAll(un)
 
-    //solveOne(un)
+    //solveOne(un)  
 
-  }
-
-  private def cleanIfMore(un: Usernode) {
-    if (!un.canAcceptNewNeighbor && !un.solvingChallenges.isEmpty) {
-      un.solvingChallenges map {
-        x =>
-          x.sender.removeFromScoreList(un.getID)
-          un.removeFromScoreList(x.sender.getID)
-      }
-      un.solvingChallenges.clear()
-    }
   }
 
   private def solveOne(un: Usernode) {
-    un.solvingChallenges.filter { x => x.remainingCycles <= 0 } map {
+    un.solvingChallenges.filter { x => x._2 <= 0 } map {
       elem =>
-        elem.sender.receivedSolvedChallenge(un)
+        Oracle.getNode(elem._1.toInt).receivedSolvedChallenge(un)
     }
     un.cleanSolvedChallenges
   }
 
   private def solveAll(un: Usernode) {
-    if (!un.solvingChallenges.exists { x => x.remainingCycles > 0 } &&
+    if (!un.solvingChallenges.exists { x => x._2 > 0 } &&
       un.solvingChallenges.size > 0) {
       un.solvingChallenges map {
         elem =>
-          elem.sender.receivedSolvedChallenge(un)
+          Oracle.getNode(elem._1.toInt).receivedSolvedChallenge(un)
       }
       un.cleanSolvedChallenges
 

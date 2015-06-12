@@ -4,27 +4,76 @@ import peersim.core.Control
 import basicGossip.oracle.Oracle
 import peersim.core.Network
 import basicGossip.node.NodeStatus
-import org.omg.PortableInterceptor.ACTIVE
 
 class Test(name: String) extends Control {
 
   override def execute: Boolean = {
     //bidirectionalScore
-    //scoreSize
+    scoreSize
     //onlyOneInSolving
     //bidirectionalHpv
-    //solvingChallenges
+    solvingChallenges
     //oneActive
     //puzzlesAmount
     //solveNwaiting
     //solving
+    //cycle
+    //frLess
+    //actives
+    s
     false
+  }
+
+  def s = {
+
+    try {
+      //val sums = Oracle.badKicked.values.sum.toFloat
+      //val size = Network.size - 1
+      //println(Oracle.currentPackage + " -> " + sums / size)
+    val sums = ((1000 until 1100).toList map {
+      id => Oracle.getNode(id).solvingChallenges.size
+    }).sum
+    println(Oracle.currentPackage + " -> " + sums)
+    } catch {
+      case e =>
+    }
+  }
+
+  def actives = Oracle.allNodesExceptStreamer map {
+    node =>
+      val a = node.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size
+      if (a > Oracle.MAX_WIN) {
+        println("NODES HAVE MORE CONNECTIONS THAN MAXWIN")
+      }
+  }
+
+  def frLess = {
+    Oracle.freeRiders map {
+      id =>
+        val size = Oracle.getNode(id).scoreList.filter(_._2.status == NodeStatus.ACTIVE).size
+        if (size > Oracle.RACIONAL_MAX_CONNECTIONS) {
+          println("BUGGGGGGG @ RACIONAIS COM MAIS LIGACOES")
+        }
+    }
+  }
+
+  def cycle = {
+    Oracle.altruistics map {
+      id =>
+        val a = Oracle.getNode(id).solvingChallenges
+        println("Node: " + id + " -> " + a)
+        try {
+          println(Oracle.getNode(a.head._1.toInt).scoreList)
+        } catch {
+          case e =>
+        }
+    }
   }
 
   def solving {
     Oracle.allNodesExceptStreamer map {
       node =>
-        val solvingIds = node.solvingChallenges.map { x => x.sender.getID } map {
+        val solvingIds = node.solvingChallenges.map { x => x._1 } map {
           key =>
             if (!node.scoreList.filter(_._2.status == NodeStatus.SOLVING).map(_._1).toList.contains(key)) {
               println("BUGGGG SOLVING LIST DOES NOT MATCH SCORELIST SOLVING")
@@ -36,13 +85,14 @@ class Test(name: String) extends Control {
   def solveNwaiting = {
     val allPuzzles = Oracle.allNodesExceptStreamer map {
       node =>
-        val sender = node.solvingChallenges.map(_.sender)
+        val sender = node.solvingChallenges.keys
         sender map {
-          x =>
-            if (!x.scoreList.filter(_._2.status == NodeStatus.WAITING).contains(node.getID)) {
+          id =>
+            val other = Oracle.getNode(id.toInt)
+            if (!other.scoreList.filter(_._2.status == NodeStatus.WAITING).contains(node.getID)) {
               println("SOLVING WITHOUT WAITING")
-              println("node: " + node.getID + " solving " + sender.map(_.getID))
-              println("node: " + x.getID + " waiting " + x.scoreList.filter(_._2.status == NodeStatus.WAITING))
+              println("node: " + node.getID + " solving " + sender)
+              println("node: " + id + " waiting " + node.scoreList.filter(_._2.status == NodeStatus.WAITING))
             }
         }
     }
@@ -63,7 +113,7 @@ class Test(name: String) extends Control {
       val size = for (id <- 1000 until 1100) yield Oracle.getNode(id).solvingChallenges.size
 
       println("NEW SOLVING " + size.sum)
-      
+
     } catch {
       case e: Throwable =>
     }
@@ -82,20 +132,20 @@ class Test(name: String) extends Control {
       //
       //      println("MIN " + a.min)
     } catch {
-      case e: Throwable=>
+      case e: Throwable =>
     }
   }
 
   def onlyOneInSolving = {
     Oracle.allNodesExceptStreamer map {
       node =>
-        val b = node.solvingChallenges map (_.sender.getID)
+        val b = node.solvingChallenges.keys
         if (b.toSet.size != b.size) {
           println("BUGGED NODE ")
           println("b.toSet " + b.toSet)
           println("B -> " + b)
           println("BUGGGGGGGGGGGGGG @ Test.onlyOneInSolving")
-          println(node.solvingChallenges.map(_.sender.getID))
+          println(node.solvingChallenges.keys)
         }
     }
 
@@ -117,7 +167,7 @@ class Test(name: String) extends Control {
   def scoreSize = {
     Oracle.allNodesExceptStreamer map {
       node =>
-        if (node.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size > 15) {
+        if (node.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size > node.behaviorProtocol.maxWin) {
           println("BUGGGGGGGGGGGGGG @ Test.scoreSize")
           println("NODE: " + node.getID + " score size " + node.scoreList.size)
         }
@@ -129,10 +179,10 @@ class Test(name: String) extends Control {
     Oracle.allNodesExceptStreamer map {
       node =>
         val puzzles = node.solvingChallenges
-        if (puzzles.size > 1) {
+        if (puzzles.size > node.behaviorProtocol.maxWin) {
           println("BUGGGGGGGGGGGGGG @ Test.solvingChallenges")
           println("Node : " + node.getID + " -> solving " + puzzles.size + " challenges")
-          println(puzzles.map(_.sender.getID).toList)
+          println(puzzles.keys.toList)
           println("is free rider? " + Oracle.freeRiders.contains(node.getID))
         }
     }

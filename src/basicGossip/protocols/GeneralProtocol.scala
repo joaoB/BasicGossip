@@ -10,13 +10,23 @@ import peersim.core.Node
 import peersim.edsim.EDProtocol
 import peersim.transport.Transport
 import basicGossip.messages.ConfirmSolveChallenge
+import basicGossip.node.Neighbor
+import basicGossip.node.NodeStatus
+
+object ProtocolName extends Enumeration {
+  type ProtocolName = Value
+  val ALT, FR = Value
+}
 
 trait GeneralProtocol extends CDProtocol with EDProtocol {
+  import basicGossip.protocols.ProtocolName._
 
   val baseWin: Int
   val maxWin: Int
-  
+
   val maxHops = Oracle.maxHops
+
+  val protocolName: ProtocolName
 
   def nextCycle(node: Node, pid: Int) {}
 
@@ -24,9 +34,16 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
 
   def computeFanout(gossiper: Usernode, sender: Node): Set[Long];
 
-  def initializeScoreList(un: Usernode, ids: Seq[Long]);
+  def initializeScoreList(un: Usernode, ids: Seq[Long]) = {
+    un.scoreList = Map(ids map {
+      id => id -> Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
+    }: _*)
+  }
 
-  def addToScoreList(un: Usernode, nid: Long);
+  def addToScoreList(un: Usernode, nid: Long) {
+    val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
+    un.scoreList = un.scoreList.updated(nid, neigh)
+  }
 
   def canAcceptNewNeighbor(un: Usernode): Boolean
 
@@ -34,13 +51,14 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
     Oracle.forwardProbability > Random.nextFloat
   }
 
-  def newNodeSolving(un: Usernode, id: Int) = {}
+  def newNodeSolving(un: Usernode, id: Int) = {
+    val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.WAITING)
+    un.scoreList = un.scoreList.updated(id, neigh)
+  }
 
   def belowBaseRank(score: Float): Boolean = {
     val calced = Oracle.forwardProbability * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
-    val random = Random.nextFloat
-    val a = calced > random
-    a
+    calced > Random.nextFloat
   }
 
   def processEvent(node: Node, pid: Int, event: Object) = {
@@ -53,11 +71,14 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
   }
 
   def processInfo(node: Node, pid: Int, info: Info) {
+     
     node match {
       case usernode: Usernode if !usernode.containsElem(info.value) =>
         Oracle.saveMaxHopInfo(info)
+        Oracle.saveHop(info)
         gossipMessage(usernode, info, pid)
         info.sender.newMessages += 1
+
       case usernode: Usernode =>
         usernode.increaseScore(info.sender, 1)
         info.sender.repeatedMessages += 1
@@ -100,9 +121,21 @@ trait GeneralProtocol extends CDProtocol with EDProtocol {
         Oracle.incSentMessages(node)
         trans.send(node, peern, info, pid)
         node.decreaseScore(peern)
-        Oracle.saveHop(info)
+
       case _ => ???
     }
 
   }
+
+  def dropConnections(un: Usernode) {
+    val size = un.scoreList.size
+    un.scoreList.take(size - Oracle.RACIONAL_MAX_CONNECTIONS) map {
+      elem =>
+        val id = elem._1.toInt
+        un.removeFromScoreList(id)
+        Oracle.getNode(id).removeFromScoreList(un.getID)
+    }
+
+  }
+
 }

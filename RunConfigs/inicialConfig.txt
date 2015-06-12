@@ -1,28 +1,32 @@
 # network size
 SIZE 1
-HyParViewJoinTest.ACTIVE_VIEW_SIZE = 12
 Oracle.FANOUT 7
-Oracle.MIN_WINDOW 7
+
 Oracle.MIN_WINDOW_TO_SEARCH 12
+Oracle.MAX_WIN 15
+
+Oracle.MAX_HOPS 30
+
+Oracle.QUARANTINE 220
+Oracle.RACIONAL_MAX_CONNECTIONS 10
+
 Usernode.SCORE_DELTA 1
 Oracle.FR_THRESHOLD -15
 Oracle.FR_PERCENTAGE 0
-Oracle.QUARANTINE 220
-Oracle.RACIONAL_MAX_CONNECTIONS 12
 
 Oracle.FORWARD_PROBABILITY 0.4
 Oracle.REDUNDANCY_FACTOR 0
-Oracle.INITIALIZE_SCORE 0
+Oracle.BASE_RANK 0
 # parameters of periodic execution
 
-CYCLES 10000
+CYCLES 20000
 CYCLE SIZE*10000
 
 # parameters of message transfer
 # delay values here are relative to cycle length, in percentage,
 # eg 50 means half the cycle length, 200 twice the cycle length, etc.
-MINDELAY 0
-MAXDELAY 0
+MINDELAY 1
+MAXDELAY 5
 # drop is a probability, 0<=DROP<=1
 DROP 0
 
@@ -62,9 +66,6 @@ protocol.searchN.step CYCLE
 network.node basicGossip.node.Usernode
 
 ################### initialization ======================
-
-
-Oracle.MAX_HOPS 30
 
 #0 - do NOT send to freeriders
 #1 - send to random 

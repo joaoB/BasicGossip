@@ -22,44 +22,15 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
   val cycles = (Configuration.getInt("CYCLES", 1))
   var info: Int = 0
 
-  //  def a = {
-  //        val a = new Thread(new Runnable {
-  //      def run {
-  //        while (info < cycles) {
-  //          /*if (info % 50 == 0) */println("generating new info ///////////////////////////////////////////////////////////////////////////" + info)
-  //          sendInfo(Oracle.getNode(0), newInfo, 0)
-  //         // Thread.sleep(20)
-  //        }
-  //        AvgReliability.run
-  //      }
-  //    })
-  //
-  //    a.start
-  //    if(info + 10 == cycles)a.join
-  //  }
-
   override def nextCycle(node: Node, pid: Int): Unit = {
-    //if (info % 50 == 0) println("generating new info " + info)
-    //    if (info == 500) {
-    //      for (a <- 0 until 1)
-    //        Oracle.addAltruisticNode
-    //      Oracle.getNode(1000).scoreList
-    //      println("NEWWWWWWWWWWWWWWWWWWWWWWWWWW - > " + Oracle.getNode(1000).scoreList)
-    //    }
-
-    //    try {
-    //      println("node: " + 72 + " -> " + Oracle.getNode(72).scoreList.size)
-    //    }
-    //    catch {
-    //      case e: Throwable => 
-    //    }
 
     if (Network.size < 1000) {
       Oracle.addAltruisticNode
     }
 
-    if (Oracle.currentPackage == 5500) {
-      Oracle.injectFreeRiders
+    if (Oracle.currentPackage == 4999) {
+      for (id <- 0 until 100)
+        Oracle.addAltruisticNode
     }
 
     for (id <- 1 until Network.size) {

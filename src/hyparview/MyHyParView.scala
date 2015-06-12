@@ -8,8 +8,6 @@ import basicGossip.node.NodeStatus
 
 class MyHyParView {
 
-  val MAX_CONNECTIONS = 15
-
   def join(un: Usernode) {
     val nodes = un.scoreList.map(_._1)
     Random.shuffle(nodes).headOption match {
@@ -46,11 +44,9 @@ class MyHyParView {
 
   private def canConnect(node: Usernode, newMember: Usernode): Boolean = {
     val a = !node.scoreList.keySet.contains(newMember.getID) &&
-      (node.scoreList.values.toSeq.filter {
-        x => x.status == NodeStatus.ACTIVE
-      }).size < MAX_CONNECTIONS &&
+      node.canAcceptNewNeighbor &&
       node.getID != newMember.getID &&
-      !newMember.solvingChallenges.exists(_.sender.getID == node.getID)
+      !newMember.solvingChallenges.exists(_._1 == node.getID)
 
     a
 
@@ -58,7 +54,7 @@ class MyHyParView {
 
   private def disconnectOneAcceptOther(node: Usernode, connector: Usernode) = {
     if (node.getID != connector.getID &&
-      !connector.solvingChallenges.exists(_.sender.getID == node.getID)
+      !connector.solvingChallenges.exists(_._1 == node.getID)
       && !node.scoreList.keySet.contains(connector.getID)) {
       connector.newNodeSolving(node.getID.toInt) //injects waiting
       node.addNewChallenge(connector) //injects solving scoreList and solvingList

@@ -5,12 +5,14 @@ import basicGossip.node.NodeStatus
 import basicGossip.node.Usernode
 import basicGossip.oracle.Oracle
 import peersim.core.Node
+import peersim.config.Configuration
 
 class AltruisticProtocol(name: String) extends GeneralProtocol {
 
+  override val protocolName = ProtocolName.ALT
   override val baseWin = Oracle.MIN_WIN_TO_SEARCH
-  override val maxWin = 15
-  
+  override val maxWin = Oracle.MAX_WIN
+
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
     un.scoreList.size < Oracle.MIN_WIN_TO_SEARCH
   }
@@ -23,22 +25,7 @@ class AltruisticProtocol(name: String) extends GeneralProtocol {
     }).keySet
   }
 
-  override def initializeScoreList(un: Usernode, ids: Seq[Long]) = {
-    un.scoreList = Map(ids map {
-      id => id -> Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
-    }: _*)
-  }
-
-  override def newNodeSolving(un: Usernode, id: Int) = {
-    val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.WAITING)
-    un.scoreList = un.scoreList.updated(id, neigh)
-  }
-
   override def canAcceptNewNeighbor(un: Usernode) =
     un.scoreList.filter(_._2.status == NodeStatus.ACTIVE).size < maxWin
 
-  override def addToScoreList(un: Usernode, nid: Long) {
-    val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.ACTIVE)
-    un.scoreList = un.scoreList.updated(nid, neigh)
-  }
 }

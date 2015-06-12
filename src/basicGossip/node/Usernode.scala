@@ -31,13 +31,15 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   var repeatedMessages = 0
 
   //var waitingConfirm = MutableList[Int]()
-  var solvingChallenges = MutableList[WaitCycles]()
+  var solvingChallenges = Map[Long, Int]()
 
   val scoreDelta = Configuration.getDouble("Usernode." + "SCORE_DELTA").toFloat
 
   def behaviorProtocol: GeneralProtocol = this.getProtocol(0) match {
     case protocol: GeneralProtocol => protocol
   }
+
+  def dropConnections = behaviorProtocol.dropConnections(this)
 
   def isActive(n: NodeStatus) = {
     n == NodeStatus.ACTIVE
@@ -55,17 +57,28 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     val random = new Random
     val time = Oracle.QUARANTINE - 10 + random.nextInt(20)
 
-    if (Oracle.currentPackage >= 5500)
-      if (Oracle.altruistics.contains(this.getID)) {
-        Oracle.altruisticChallanges += 1
-      } else {
-        println("WIL NOT COUNT")
-      }
+    //    if (Oracle.currentPackage >= 5500)
+    //      if (Oracle.altruistics.contains(this.getID)) {
+    //        Oracle.altruisticChallanges += 1
+    //      } else {
+    //        println("WIL NOT COUNT")
+    //      }
 
-    solvingChallenges.+=(WaitCycles(time, node))
+    Oracle.incChallenges(this)
+    //solvingChallenges.+=(WaitCycles(time, node))
+    solvingChallenges = solvingChallenges.updated(node.getID, time)
   }
 
   def solveChallenge = {
+    solvingChallenges.find {
+      elem => elem._2 != 0
+    } match {
+      case Some(elem) => solvingChallenges = solvingChallenges.updated(elem._1, elem._2 - 1)
+      case None => 
+    }
+  }
+
+ /* def solveChallenge = {
     val solved = solvingChallenges.find { x => x.remainingCycles > 0 } match {
       case Some(elem) => MutableList(elem.copy(remainingCycles = elem.remainingCycles - 1))
       case None => MutableList[WaitCycles]()
@@ -75,9 +88,9 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
       case Some(elem) => solved ++ solvingChallenges.filter { x => x.sender.getID != elem.sender.getID }
       case _ => solvingChallenges
     }
-  }
+  }*/
 
-  def cleanSolvedChallenges = solvingChallenges = solvingChallenges.filterNot(_.remainingCycles <= 0)
+  def cleanSolvedChallenges = solvingChallenges = solvingChallenges.filterNot(_._2 <= 0)
 
   def saveMessage(info: Info) = {
     messageList.+=(info.value)
@@ -106,15 +119,11 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
         }).toList.sortBy(_._2).head
 
         this.removeFromScoreList(elem._1)
-        //this.solvingChallenges = solvingChallenges.filter(_.sender.getID != elem._1)
-        Oracle.getNode(elem._1.toInt).solvingChallenges = Oracle.getNode(elem._1.toInt).solvingChallenges.filter(_.sender.getID != this.getID)
+        Oracle.getNode(elem._1.toInt).solvingChallenges = Oracle.getNode(elem._1.toInt).solvingChallenges.filter(_._1 != this.getID)
         Oracle.getNode(elem._1.toInt).removeFromScoreList(this.getID)
 
         this.addToScoreList(newMember.getID)
         newMember.addToScoreList(this.getID)
-
-      } else {
-        println("------------------------------------------------------------")
       }
     }
 
@@ -164,7 +173,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   override def clone(): Object = {
     this.scoreList = Map[Long, Neighbor]()
     this.messageList = BitSet()
-    this.solvingChallenges = new MutableList[WaitCycles]()
+    this.solvingChallenges = Map[Long, Int]()
     super.clone()
   }
 

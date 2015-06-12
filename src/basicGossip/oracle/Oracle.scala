@@ -21,14 +21,14 @@ class Oracle extends AddNode {
   val maxHops = Configuration.getInt("Oracle.MAX_HOPS")
   val peerAlgorithm = Configuration.getInt("Oracle." + "PEER_ALGORITHM")
   val fanout = Configuration.getInt("Oracle.FANOUT")
-  val minWindow = Configuration.getInt("Oracle.MIN_WINDOW")
   val redundancyFactor = Configuration.getDouble("Oracle.REDUNDANCY_FACTOR")
-  val baseRank = Configuration.getDouble("Oracle.INITIALIZE_SCORE")
+  val baseRank = Configuration.getDouble("Oracle.BASE_RANK")
   val forwardProbability = Configuration.getDouble("Oracle.FORWARD_PROBABILITY")
   val FR_THRESHOLD = Configuration.getInt("Oracle.FR_THRESHOLD")
   val MIN_WIN_TO_SEARCH = Configuration.getInt("Oracle.MIN_WINDOW_TO_SEARCH")
   val QUARANTINE = Configuration.getInt("Oracle.QUARANTINE")
 
+  val MAX_WIN = Configuration.getInt("Oracle.MAX_WIN")
   val RACIONAL_MAX_CONNECTIONS = Configuration.getInt("Oracle.RACIONAL_MAX_CONNECTIONS")
 
   var kicked = Map[Int, Int]()
@@ -50,6 +50,15 @@ class Oracle extends AddNode {
   def updateCurrentPackage = currentPackage += 1
 
   def kick(id: Int) = {
+    if (altruistics.contains(id)) {
+      badKick(id)
+    } else {
+      kicka(id)
+    }
+
+  }
+
+  private def kicka(id: Int) = {
     kicked = kicked match {
       case map if map.contains(id) =>
         kicked.updated(id, kicked(id) + 1)
@@ -57,7 +66,7 @@ class Oracle extends AddNode {
     }
   }
 
-  def badKick(id: Int) =
+  private def badKick(id: Int) =
     badKicked = badKicked match {
       case map if map.contains(id) =>
         badKicked.updated(id, badKicked(id) + 1)
@@ -65,24 +74,34 @@ class Oracle extends AddNode {
     }
 
   def saveMaxHopInfo(info: Info) =
-    maxHopInfo match {
-      case elem if info.hop >= elem => updateMaxHopInfo(info)
-      case _ => //updateMaxHopInfo(info)
+    if (info.hop > maxHopInfo && currentPackage > 5000) {
+      maxHopInfo = info.hop
+    }
+
+  def incChallenges(un: Usernode) =
+    if (currentPackage > 2499) {
+      if (!Oracle.freeRiders.contains(un.getID)) {
+        altruisticChallanges += 1
+      } else {
+        FRchallenges += 1
+      }
     }
 
   def incSentMessages(un: Usernode) =
-    if (!Oracle.freeRiders.contains(un.getID)) {
-      altruisticsAmountOfSentMessages += 1
-    } else {
-      frAmountOfSentMessages += 1
-    }
+    if (currentPackage > 5000)
+      if (!Oracle.freeRiders.contains(un.getID)) {
+        altruisticsAmountOfSentMessages += 1
+      } else {
+        frAmountOfSentMessages += 1
+      }
 
   private def updateMaxHopInfo(info: Info) =
     maxHopInfo = info.value
 
-  def saveHop(info: Info) =
-    avgHops.+=(info.hop)
-
+  def saveHop(info: Info) = {
+    if (currentPackage > 5000)
+      avgHops.+=(info.hop)
+  }
 
   def getLinkable(usernode: Usernode): Link =
     usernode.getProtocol(FastConfig.getLinkable(0)) match {
