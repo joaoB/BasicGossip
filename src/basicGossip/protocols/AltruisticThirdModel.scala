@@ -24,7 +24,7 @@ class AltruisticThirdModel(name: String) extends AltruisticProtocol(name) {
                         sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
                       case _ => //do nothing
                     }
-                  case _ => sendToRandom(node, Info(info.value, node, info.hop + 1), pid)
+                  case _ =>
                 }
 
               }

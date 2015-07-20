@@ -17,8 +17,8 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //reliabilityAbovePercentage
     //dumpNodesWithZeroMessages
 
-    //altruisticReliability
-    //freeriderReliability
+    altruisticReliability
+    freeriderReliability
 
     //dumpFreeRiders
     //newNodesReliability
@@ -38,15 +38,15 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //isolatedNodes
     //maxmin
 
-//    aalt
-//    afr
-//    hopsNavg
+    //    aalt
+    //    afr
+    //    hopsNavg
     false
   }
 
   def aalt = {
     val last = Oracle.altruistics map {
-      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 500).size.toFloat / 500
+      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 5000).size.toFloat / 5000
     }
     println("alt reli: " + last.sum.toFloat / last.size)
     println("alt messages " + Oracle.altruisticsAmountOfSentMessages)
@@ -566,7 +566,21 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
   def altruisticReliability = {
 
+    val repeated = Oracle.allNodesExceptStreamer map (_.repeatedMessages)
+    println("repeated: " + repeated.sum)
+    
     try {
+      val hopinha = Oracle.allNodesExceptStreamer map (_.avgHops)
+      val altHops = (Oracle.altruistics map {
+        id => Oracle.getNode(id)
+      }).map(_.avgHops)
+      println(" ALT above 5.3 -> " + altHops.count(_ > 5.3))
+      println(" ALT hopinha max " + altHops.max)
+      println(" ALT hopinha min " + altHops.min)
+      println("above 5.3 -> " + hopinha.count(_ > 5.3))
+      println("hopinha max " + hopinha.max)
+      println("hopinha min " + hopinha.min)
+
       val a = for (a <- 1000 until 1100) yield Oracle.getNode(a).messageList.filter(_ > 9000).size.toFloat / 1000
 
       println("NEW " + a.sum.toFloat / a.size)
@@ -579,7 +593,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       println("NEEEEEEEEEEEEEEEEG")
     }
     if (!Oracle.avgHops.isEmpty) {
-      val b: Long = Oracle.avgHops.sum
+      val b: Float = Oracle.avgHops.sum.toFloat
       val size: Long = Oracle.avgHops.size
       println("size : " + size)
       println("sum of avgs " + b)

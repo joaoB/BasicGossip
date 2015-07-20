@@ -14,15 +14,19 @@ import peersim.core.Network
 import peersim.core.Node
 import basicGossip.messages.WaitCycles
 import scala.util.Random
+import utils.RingBuffer
+import basicGossip.protocols.Lifting
+import basicGossip.protocols.GeneralProtocol.GeneralProtocol
 
 object NodeStatus extends Enumeration {
   type NodeStatus = Value
   val ACTIVE, SOLVING, WAITING, DISCONNECTED = Value
 }
 import NodeStatus._
-case class Neighbor(score: Int, status: NodeStatus)
+case class Neighbor(score: Float, status: NodeStatus)
 
 class Usernode(prefix: String) extends ModifiableNode(prefix) {
+
   var messageList = BitSet()
 
   var scoreList = Map[Long, Neighbor]()
@@ -30,10 +34,17 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   var newMessages = 0
   var repeatedMessages = 0
 
-  //var waitingConfirm = MutableList[Int]()
+  var ring: RingBuffer[Double] = new RingBuffer(20)
+  for (i <- 0 until 20) ring.+=(0)
+  def avgHops = ring.sum / ring.size
+
   var solvingChallenges = Map[Long, Int]()
+  var proposals = Map[Int, MutableList[Info]]()
+  //var proposals = Map[Int, MutableList[Long]]()
 
   val scoreDelta = Configuration.getDouble("Usernode." + "SCORE_DELTA").toFloat
+
+  def kickFreeRiders = behaviorProtocol.kickFreeRiders(this)
 
   def behaviorProtocol: GeneralProtocol = this.getProtocol(0) match {
     case protocol: GeneralProtocol => protocol
@@ -41,31 +52,43 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
   def dropConnections = behaviorProtocol.dropConnections(this)
 
-  def isActive(n: NodeStatus) = {
-    n == NodeStatus.ACTIVE
+  def requestProposals = {
+    proposals.filterKeys { x => x < Oracle.currentPackage && !messageList(x) } map {
+      elems =>
+        val a = scoreList.filter(elems._2.map(_.sender.getID) contains _._1)
+        if (!a.isEmpty) {
+          val minID = a.minBy(_._2.score)._1.toInt
+          elems._2.find { x => x.sender.getID == minID } match {
+            case Some(info) if scoreList(minID).score > 45 =>
+            case Some(info) =>
+              behaviorProtocol.sendInfo(Oracle.getNode(minID), this, Info(elems._1, Oracle.getNode(minID), info.hop + 1), 0)
+            case None =>
+          }
+        }
+    }
+    proposals = proposals.filterNot(x => x._1 < Oracle.currentPackage)
   }
+
+  def newProposal(info: Info) =
+    proposals = proposals.get(info.value) match {
+      //case Some(elem) => proposals.updated(info.value, elem.+=(info.sender.getID))
+      //case None => proposals.updated(info.value, MutableList(info.sender.getID))
+      case Some(elem) => proposals.updated(info.value, elem.+=(info))
+      case None => proposals.updated(info.value, MutableList(info))
+
+    }
 
   def newNodeSolving(id: Int) = {
     behaviorProtocol.newNodeSolving(this, id)
   }
 
   def addNewChallenge(node: Usernode) {
-    //Oracle.altruisticChallanges += 1
     val neigh = Neighbor(Oracle.baseRank.toInt, NodeStatus.SOLVING)
     this.scoreList = this.scoreList.updated(node.getID, neigh)
 
     val random = new Random
     val time = Oracle.QUARANTINE - 10 + random.nextInt(20)
-
-    //    if (Oracle.currentPackage >= 5500)
-    //      if (Oracle.altruistics.contains(this.getID)) {
-    //        Oracle.altruisticChallanges += 1
-    //      } else {
-    //        println("WIL NOT COUNT")
-    //      }
-
     Oracle.incChallenges(this)
-    //solvingChallenges.+=(WaitCycles(time, node))
     solvingChallenges = solvingChallenges.updated(node.getID, time)
   }
 
@@ -74,26 +97,19 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
       elem => elem._2 != 0
     } match {
       case Some(elem) => solvingChallenges = solvingChallenges.updated(elem._1, elem._2 - 1)
-      case None => 
+      case None =>
     }
   }
 
- /* def solveChallenge = {
-    val solved = solvingChallenges.find { x => x.remainingCycles > 0 } match {
-      case Some(elem) => MutableList(elem.copy(remainingCycles = elem.remainingCycles - 1))
-      case None => MutableList[WaitCycles]()
-    }
-
-    solvingChallenges = solved.headOption match {
-      case Some(elem) => solved ++ solvingChallenges.filter { x => x.sender.getID != elem.sender.getID }
-      case _ => solvingChallenges
-    }
-  }*/
-
   def cleanSolvedChallenges = solvingChallenges = solvingChallenges.filterNot(_._2 <= 0)
+
+  def updateAvg(info: Info) = {
+    ring.+=(ring.next * 0.8 + info.hop * 0.2)
+  }
 
   def saveMessage(info: Info) = {
     messageList.+=(info.value)
+
   }
 
   def receivedSolvedChallenge(newMember: Usernode): Unit = {
@@ -101,12 +117,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
 
     if (!newMember.canAcceptNewNeighbor) {
       this.removeFromScoreList(newMember.getID)
-      newMember.removeFromScoreList(this.getID)
-      //println("A " + this.scoreList.filter(_._2.status == ACTIVE).size)
-      //println("B " + newMember.scoreList.filter(_._2.status == ACTIVE).size)
-      //println("%%%%")
       return
-
     }
 
     if (waiting.contains(newMember.getID) && canAcceptNewNeighbor) {
@@ -143,7 +154,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     val id = node.getID
     scoreList = scoreList match {
       case map if map.contains(id) =>
-        val newScore = map(id).score + 1
+        val newScore = map(id).score + score
         scoreList.updated(id, Neighbor(newScore, ACTIVE))
       case _ => scoreList
     }
@@ -174,6 +185,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     this.scoreList = Map[Long, Neighbor]()
     this.messageList = BitSet()
     this.solvingChallenges = Map[Long, Int]()
+    this.ring = new RingBuffer(20)
     super.clone()
   }
 

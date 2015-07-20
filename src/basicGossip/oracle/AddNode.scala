@@ -1,15 +1,16 @@
 package basicGossip.oracle
 
-import hyparview.MyHyParView
-import peersim.core.Network
+import scala.util.Random
+
 import basicGossip.node.Usernode
 import basicGossip.protocols.AltruisticProtocol
-import scala.util.Random
-import basicGossip.protocols.GeneralProtocol
 import basicGossip.protocols.FRProtocol
-import peersim.config.Configuration
+import basicGossip.protocols.GeneralProtocol.GeneralProtocol
+import basicGossip.protocols.GeneralProtocol.ProtocolName
 import basicGossip.protocols.RationalProtocol
-import basicGossip.protocols.ProtocolName
+import hyparview.MyHyParView
+import peersim.config.Configuration
+import peersim.core.Network
 
 protected abstract class AddNode extends AllNodes {
 
@@ -25,12 +26,9 @@ protected abstract class AddNode extends AllNodes {
     val nodeNode = Network.get(nodeID)
 
     for (id <- 0 until protocol.baseWin) {
-
-      val connect = Oracle.getNode(Random.nextInt(Network.size))
       val lst = (1 until Network.size toList).diff(List(nodeID)).diff(node.scoreList.keySet toList)
-
       lst match {
-        case Nil => None
+        case Nil => MyHyParView.join(node)
         case x => MyHyParView.join(node, Oracle.getNode(Random.shuffle(x).head))
       }
     }
@@ -48,12 +46,12 @@ protected abstract class AddNode extends AllNodes {
   }
 
   def addRational = {
-    val node = addNodeAux(new RationalProtocol("Free Rider"))
+    val node = addNodeAux(new RationalProtocol("RATIONAL"))
   }
-  
+
   def injectFreeRiders = {
     val amount = 300
-    val fr = Random.shuffle((1 until 999).toList).take(amount)
+    val fr = Random.shuffle((3 until 999).toList).take(amount)
     allNodesExceptStreamer filter (node => fr.contains(node.getID)) map {
       x =>
         x.setProtocol(0, new RationalProtocol("free rider injected"))

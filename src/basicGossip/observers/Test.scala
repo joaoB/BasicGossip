@@ -9,10 +9,10 @@ class Test(name: String) extends Control {
 
   override def execute: Boolean = {
     //bidirectionalScore
-    scoreSize
+    //scoreSize
     //onlyOneInSolving
     //bidirectionalHpv
-    solvingChallenges
+    //solvingChallenges
     //oneActive
     //puzzlesAmount
     //solveNwaiting
@@ -27,13 +27,12 @@ class Test(name: String) extends Control {
   def s = {
 
     try {
-      //val sums = Oracle.badKicked.values.sum.toFloat
-      //val size = Network.size - 1
-      //println(Oracle.currentPackage + " -> " + sums / size)
-    val sums = ((1000 until 1100).toList map {
-      id => Oracle.getNode(id).solvingChallenges.size
-    }).sum
-    println(Oracle.currentPackage + " -> " + sums)
+      //for (id <- 1 until 3) {
+      val id = 1
+        //println(Oracle.currentPackage + ": " + " Node: " + id + " -> " + Oracle.getNode(id).avgHops)
+      //}
+
+      println(Oracle.currentPackage + ": " + Oracle.badKicked.size + " -> " + Oracle.altruisticsAmountOfSentMessages)
     } catch {
       case e =>
     }

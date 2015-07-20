@@ -20,20 +20,9 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
   }
 
   def execute(un: Usernode) {
-
-    kickFreeRiders(un)
-
+    un.kickFreeRiders
     if (un.shouldLookForNewNeighbor) {
       MyHyParView.join(un)
-    }
-  }
-
-  def kickFreeRiders(un: Usernode) = {
-    un.freeRiders map {
-      fr =>
-        Oracle.kick(fr.toInt)
-        un.removeFromScoreList(fr)
-        Oracle.getNode(fr.toInt).removeFromScoreList(un.getID)
     }
   }
 

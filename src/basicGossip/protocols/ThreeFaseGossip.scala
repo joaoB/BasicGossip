@@ -19,7 +19,7 @@ class ThreeFaseGossip(name: String) extends AltruisticProtocol(name) {
 
   override def processEvent(node: Node, pid: Int, event: Object) = {
     event match {
-      case info: Info => processInfo(node, pid, info)
+      case info: Info => processInfo(Oracle.getNode(node.getID.toInt), pid, info)
       case propose: Propose => processPropose(Oracle.getNode(node.getID.toInt), pid, propose)
       case request: Request => processRequest(Oracle.getNode(node.getID.toInt), pid, request)
       case _ => ???

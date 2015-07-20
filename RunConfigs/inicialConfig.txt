@@ -8,13 +8,13 @@ Oracle.MAX_WIN 15
 Oracle.MAX_HOPS 30
 
 Oracle.QUARANTINE 220
-Oracle.RACIONAL_MAX_CONNECTIONS 10
+Oracle.RACIONAL_MAX_CONNECTIONS 7
 
 Usernode.SCORE_DELTA 1
-Oracle.FR_THRESHOLD -15
+Oracle.FR_THRESHOLD -50
 Oracle.FR_PERCENTAGE 0
 
-Oracle.FORWARD_PROBABILITY 0.4
+Oracle.FORWARD_PROBABILITY 0.5
 Oracle.REDUNDANCY_FACTOR 0
 Oracle.BASE_RANK 0
 # parameters of periodic execution
@@ -26,7 +26,7 @@ CYCLE SIZE*10000
 # delay values here are relative to cycle length, in percentage,
 # eg 50 means half the cycle length, 200 twice the cycle length, etc.
 MINDELAY 1
-MAXDELAY 5
+MAXDELAY 10
 # drop is a probability, 0<=DROP<=1
 DROP 0
 
@@ -104,5 +104,5 @@ control.4.step CYCLE * 1
 control.4.FINAL 1
 
 control.3 basicGossip.observers.AvgReliability
-control.3.step CYCLE * 1000
+control.3.step CYCLE * 100000
 control.3.FINAL 1

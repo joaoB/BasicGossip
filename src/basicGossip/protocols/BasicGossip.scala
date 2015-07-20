@@ -28,20 +28,22 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
       Oracle.addAltruisticNode
     }
 
-    if (Oracle.currentPackage == 4999) {
-      for (id <- 0 until 100)
-        Oracle.addAltruisticNode
+    if (Oracle.currentPackage == 6999) {
+      Oracle.injectFreeRiders
     }
 
     for (id <- 1 until Network.size) {
-      Oracle.getNode(id).getProtocol(3) match {
+      val node = Oracle.getNode(id)
+      node.getProtocol(3) match {
         case p: CDProtocol =>
-          p.nextCycle(Oracle.getNode(id), 3)
+          p.nextCycle(node, 3)
       }
-      Oracle.getNode(id).getProtocol(2) match {
+      node.getProtocol(2) match {
         case p: CDProtocol =>
-          p.nextCycle(Oracle.getNode(id), 2)
+          p.nextCycle(node, 2)
       }
+      node.requestProposals
+
     }
 
     Oracle.updateCurrentPackage

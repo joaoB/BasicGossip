@@ -88,12 +88,12 @@ class Oracle extends AddNode {
     }
 
   def incSentMessages(un: Usernode) =
-    if (currentPackage > 5000)
-      if (!Oracle.freeRiders.contains(un.getID)) {
-        altruisticsAmountOfSentMessages += 1
-      } else {
-        frAmountOfSentMessages += 1
-      }
+    //if (currentPackage > 5000)
+    if (!Oracle.freeRiders.contains(un.getID)) {
+      altruisticsAmountOfSentMessages += 1
+    } else {
+      frAmountOfSentMessages += 1
+    }
 
   private def updateMaxHopInfo(info: Info) =
     maxHopInfo = info.value

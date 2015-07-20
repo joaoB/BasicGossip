@@ -2,7 +2,7 @@ package basicGossip.oracle
 
 import basicGossip.node.Usernode
 import peersim.core.Network
-import basicGossip.protocols.ProtocolName
+import basicGossip.protocols.GeneralProtocol._
 
 protected abstract class AllNodes {
 
