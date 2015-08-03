@@ -1,7 +1,6 @@
 package basicGossip.oracle
 
 import scala.util.Random
-
 import basicGossip.node.Usernode
 import basicGossip.protocols.AltruisticProtocol
 import basicGossip.protocols.FRProtocol
@@ -11,6 +10,11 @@ import basicGossip.protocols.RationalProtocol
 import hyparview.MyHyParView
 import peersim.config.Configuration
 import peersim.core.Network
+import basicGossip.protocols.Lifting.Lifting
+import basicGossip.protocols.dissemination.FreeRider
+import basicGossip.protocols.Lifting.LiftingFreeRider
+import basicGossip.protocols.Lifting.LiftingRational
+import basicGossip.protocols.GeneralProtocol.Heavyweight
 
 protected abstract class AddNode extends AllNodes {
 
@@ -37,7 +41,7 @@ protected abstract class AddNode extends AllNodes {
   }
 
   def addAltruisticNode = {
-    val node = addNodeAux(new AltruisticProtocol("Altruistic"))
+    val node = addNodeAux(new Lifting("Altruistic"))
     altruistics = allNodesExceptStreamer.filter(_.behaviorProtocol.protocolName == ProtocolName.ALT).map(_.getID.toInt)
   }
 
@@ -50,12 +54,21 @@ protected abstract class AddNode extends AllNodes {
   }
 
   def injectFreeRiders = {
-    val amount = 300
-    val fr = Random.shuffle((3 until 999).toList).take(amount)
+    val amount = 30
+    val fr = Random.shuffle((1 until Network.size).toList).take(amount)
     allNodesExceptStreamer filter (node => fr.contains(node.getID)) map {
       x =>
-        x.setProtocol(0, new RationalProtocol("free rider injected"))
-        x.dropConnections
+        x.setProtocol(0, new LiftingRational("free rider injected"))
+
+        try {
+          x.behaviorProtocol match {
+            case prot: Heavyweight =>
+              prot.setManagers(x)
+            case _ =>
+          }
+        } catch { case e => }
+
+      //x.dropConnections
     }
     altruistics = allNodesExceptStreamer.filter(_.behaviorProtocol.protocolName == ProtocolName.ALT).map(_.getID.toInt)
     freeRiders = allNodesExceptStreamer.filter(_.behaviorProtocol.protocolName == ProtocolName.FR).map(_.getID.toInt)

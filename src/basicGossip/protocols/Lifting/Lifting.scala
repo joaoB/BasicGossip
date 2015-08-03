@@ -1,3 +1,4 @@
+
 package basicGossip.protocols.Lifting
 
 import scala.annotation.migration
@@ -11,15 +12,18 @@ class Lifting(name: String) extends Heavyweight(name) {
 
   override def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (saveInfo(node, info)) {
-      computeFanout(node, info.sender) map {
+      val fanout = computeFanout(node, info.sender, info)
+      traceLog(node, fanout)
+      fanout map {
         id =>
           Oracle.getNode(id.toInt) match {
             case peern if peern.isUp =>
               if (!peern.messageList.contains(info.value)) {
-                updateHistorySent(node, id)
-                updateHistoryReceived(peern, node.getID)
                 sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
               }
+              //node will save the proposal.. even if it was not delivered
+              saveProposal(peern, node.getID)
+
             case _ =>
           }
       }
@@ -28,10 +32,6 @@ class Lifting(name: String) extends Heavyweight(name) {
 
   override def kickFreeRiders(un: Usernode): Unit = {
     //empty for now
-  }
-
-  override def swapToLifting(un: Usernode) = {
-    //we already on lifting
   }
 
 }

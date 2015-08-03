@@ -50,6 +50,8 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
     case protocol: GeneralProtocol => protocol
   }
 
+  def blackList = behaviorProtocol.blackList
+  
   def dropConnections = behaviorProtocol.dropConnections(this)
 
   def requestProposals = {
@@ -59,7 +61,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
         if (!a.isEmpty) {
           val minID = a.minBy(_._2.score)._1.toInt
           elems._2.find { x => x.sender.getID == minID } match {
-            case Some(info) if scoreList(minID).score > 45 =>
+            case Some(info) if scoreList(minID).score > -Oracle.FR_THRESHOLD - 3 =>
             case Some(info) =>
               behaviorProtocol.sendInfo(Oracle.getNode(minID), this, Info(elems._1, Oracle.getNode(minID), info.hop + 1), 0)
             case None =>
@@ -194,7 +196,8 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   }
 
   def freeRiders = {
-    scoreList.filter(x => x._2.score <= Oracle.FR_THRESHOLD && x._2.status == ACTIVE).map(_._1) toList
+    behaviorProtocol.freeRiders(this)
+    //scoreList.filter(x => x._2.score <= Oracle.FR_THRESHOLD && x._2.status == ACTIVE).map(_._1) toList
   }
 
   def shouldLookForNewNeighbor: Boolean = {

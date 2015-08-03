@@ -5,10 +5,10 @@ import basicGossip.protocols.BasicGossip
 import peersim.core.Network
 import peersim.config.FastConfig
 import peersim.core.Linkable
-
 import basicGossip.protocols.Link
 import basicGossip.oracle.Oracle
 import basicGossip.node.NodeStatus
+import basicGossip.protocols.GeneralProtocol.Heavyweight
 
 class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
@@ -19,6 +19,8 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
     altruisticReliability
     freeriderReliability
+
+    //managers
 
     //dumpFreeRiders
     //newNodesReliability
@@ -42,6 +44,17 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //    afr
     //    hopsNavg
     false
+  }
+
+  def managers = {
+    println(Oracle.freeRiders)
+    Oracle.allNodesExceptStreamer map {
+      node =>
+        node.behaviorProtocol match {
+          case h: Heavyweight => println(h.track)
+          case _ =>
+        }
+    }
   }
 
   def aalt = {
@@ -568,7 +581,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
     val repeated = Oracle.allNodesExceptStreamer map (_.repeatedMessages)
     println("repeated: " + repeated.sum)
-    
+
     try {
       val hopinha = Oracle.allNodesExceptStreamer map (_.avgHops)
       val altHops = (Oracle.altruistics map {
@@ -824,7 +837,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       case node if !node.dumpFreeRiders.isEmpty => 
         print("Node " + node.getID + "-> ")
         node.dumpFreeRiders map {
-          x => print(x + " "))
+          x => print(x + " ")))
         }
         println
       case _ =>

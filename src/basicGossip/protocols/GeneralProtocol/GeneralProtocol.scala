@@ -26,19 +26,16 @@ trait GeneralProtocol extends CDProtocol with EDProtocol with ScoreListManager {
 
   val protocolName: ProtocolName
 
-  def kickFreeRiders(un: Usernode): Unit = {
-    un.freeRiders map {
-      fr =>
-        Oracle.kick(fr.toInt)
-        un.removeFromScoreList(fr)
-        Oracle.getNode(fr.toInt).removeFromScoreList(un.getID)
-    }
-  }
+  def kickFreeRiders(un: Usernode): Unit
 
+  def freeRiders(un: Usernode): List[Long]
+  
   def nextCycle(node: Node, pid: Int) {}
 
   def shouldLookForNewNeighbor(un: Usernode): Boolean
 
+  def blackList: scala.collection.mutable.Set[Long]
+  
   def computeFanout(gossiper: Usernode, sender: Node, info: Info): Set[Long] = disseminator.computeFanout(gossiper, sender, info)
   def computeFanout(gossiper: Usernode, sender: Node): Set[Long] = disseminator.computeFanout(gossiper, sender)
 
@@ -70,14 +67,15 @@ trait GeneralProtocol extends CDProtocol with EDProtocol with ScoreListManager {
 
   def gossipMessage(node: Usernode, info: Info, pid: Int) {
     if (saveInfo(node, info)) {
-      computeFanout(node, info.sender, info) map {
+      val fanout = computeFanout(node, info.sender, info)
+      fanout map {
         id =>
           Oracle.getNode(id.toInt) match {
             case peern if peern.isUp =>
               //println(peern.proposals)
               if (!peern.messageList.contains(info.value))
-                peern.newProposal(Info(info.value, node, info.hop + 1))
-                //sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
+                //peern.newProposal(Info(info.value, node, info.hop + 1))
+                sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
             case _ =>
           }
       }

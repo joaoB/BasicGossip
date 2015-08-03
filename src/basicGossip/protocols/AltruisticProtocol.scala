@@ -8,13 +8,14 @@ import basicGossip.protocols.GeneralProtocol.ProtocolName
 import basicGossip.protocols.Lifting.Lifting
 import basicGossip.protocols.dissemination.AltruisticDisseminator
 import basicGossip.protocols.dissemination.Disseminator
+import basicGossip.protocols.dissemination.LiftingDisseminator
 
 class AltruisticProtocol(name: String) extends Lightweight(name) {
 
   override val protocolName = ProtocolName.ALT
   override val baseWin = Oracle.MIN_WIN_TO_SEARCH
   override val maxWin = Oracle.MAX_WIN
-  override val disseminator: Disseminator = AltruisticDisseminator
+  override val disseminator: Disseminator = LiftingDisseminator//AltruisticDisseminator
 
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
     un.scoreList.size < Oracle.MIN_WIN_TO_SEARCH

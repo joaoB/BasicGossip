@@ -15,6 +15,7 @@ import scala.util.Random
 import utils.DistinctRandom
 import basicGossip.oracle.Oracle
 import basicGossip.observers.AvgReliability
+import basicGossip.protocols.GeneralProtocol.Heavyweight
 
 class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProtocol with EDProtocol {
 
@@ -24,11 +25,19 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   override def nextCycle(node: Node, pid: Int): Unit = {
 
-    if (Network.size < 1000) {
+    if (Network.size < 100) {
       Oracle.addAltruisticNode
+    } else if (Oracle.currentPackage == 100) {
+      Oracle.allNodesExceptStreamer map {
+        node =>
+          node.behaviorProtocol match {
+            case h: Heavyweight => h.setManagers(node)
+            case _ =>
+          }
+      }
     }
 
-    if (Oracle.currentPackage == 6999) {
+    if (Oracle.currentPackage == 999) {
       Oracle.injectFreeRiders
     }
 
@@ -42,7 +51,7 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
         case p: CDProtocol =>
           p.nextCycle(node, 2)
       }
-      node.requestProposals
+      //node.requestProposals
 
     }
 
