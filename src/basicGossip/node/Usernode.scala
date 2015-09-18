@@ -34,6 +34,8 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   var newMessages = 0
   var repeatedMessages = 0
 
+  var waiting = BitSet()
+  
   var ring: RingBuffer[Double] = new RingBuffer(20)
   for (i <- 0 until 20) ring.+=(0)
   def avgHops = ring.sum / ring.size

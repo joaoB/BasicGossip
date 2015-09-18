@@ -10,6 +10,7 @@ import scala.util.Random
 import hyparview.MyHyParView
 import basicGossip.node.NodeStatus
 import basicGossip.protocols.GeneralProtocol.Heavyweight
+import basicGossip.protocols.GeneralProtocol.H
 
 class SearchNewNeighbor(name: String) extends CDProtocol {
 
@@ -21,20 +22,12 @@ class SearchNewNeighbor(name: String) extends CDProtocol {
   }
 
   def execute(un: Usernode) {
-
-    try {
-      if (Random.nextInt(10) > 6) {
-        un.behaviorProtocol match {
-          case prot: Heavyweight =>
-            val id = Oracle.getNode(Random.nextInt(Network.size))
-            if (!prot.blackList.contains(id.getID))
-              prot.validate(id)
-          case _ =>
-        }
-      }
-    } catch {
-      case e =>
-    }
+//    if (Random.nextInt(10) > 7) {
+//      val id = Oracle.getNode(Random.nextInt(Network.size))
+//      if (!H.blackList.contains(id.getID) && id.getID != un.getID && id.getID != 0 /*&& !Oracle.altruistics.contains(id.getID)*/) {
+//        H.validate(id)
+//      }
+//    }
 
     un.kickFreeRiders
     if (un.shouldLookForNewNeighbor) {

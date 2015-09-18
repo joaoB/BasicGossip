@@ -33,12 +33,15 @@ abstract class Heavyweight(name: String) extends GeneralProtocol {
   }
 
   override def kickFreeRiders(un: Usernode): Unit = {
-    val frs = un.freeRiders
+    val frs = un.freeRiders diff H.blackListed.toList
     Oracle.allNodesExceptStreamer map {
       node =>
         frs map {
-          fr => getLifting(node).blackListed.+=(fr)
-          Oracle.kick(fr.toInt)
+          fr =>
+            Oracle.liftingMessages += 1
+            getLifting(node).blackListed.+=(fr)
+            H.blackListed.+=(fr)
+            Oracle.kick(fr.toInt)
         }
     }
   }
@@ -78,41 +81,46 @@ abstract class Heavyweight(name: String) extends GeneralProtocol {
   }
 
   def validate(that: Usernode) {
+
+    Oracle.liftingMessages += 1 //ask history
+
     val history = getLifting(that).historySent
 
-    //this counts as a now aswer from the node
-    //    if (history.isEmpty) {
-    //      alertManagers(that, Oracle.fanout)
-    //    }
+    Oracle.liftingMessages += 1 //send history
 
     if (history.size < Oracle.fanout) {
       alertManagers(that, Oracle.fanout - history.size)
     }
 
-    history map {
-      id =>
-        val node = Oracle.getNode(id.toInt)
-        if (!getLifting(node).historyReceived.contains(that.getID)) {
-          alertManagers(that, 1)
-        }
-    }
+//    history.take(2) map {
+//      id =>
+//        Oracle.liftingMessages += 1 // ask history received
+//        val node = Oracle.getNode(id.toInt)
+//        Oracle.liftingMessages += 1 //send historyReceived
+//
+//        if (!getLifting(node).historyReceived.contains(that.getID)) {
+//          alertManagers(that, 1)
+//        }
+//    }
   }
 
   override def freeRiders(un: Usernode) = {
     getLifting(un).track.collect {
-      case elem if elem._2 < -100 => elem._1
+      case elem if elem._2 < -50 => elem._1
     }.toList
   }
 
   def alertManagers(un: Usernode, penalty: Long) = {
     getLifting(un).managers map {
       id =>
-
+        Oracle.liftingMessages += 1
         val l = getLifting(Oracle.getNode(id.toInt))
         val score = l.track.getOrElse(un.getID, 0L)
         l.track = l.track.updated(un.getID, score - penalty)
+        //println(l.track)
     }
 
   }
-
 }
+
+object H extends Heavyweight("heavy object")

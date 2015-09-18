@@ -46,6 +46,9 @@ class Oracle extends AddNode {
   var disconnects = 0
   def incChallengesBeforeStream = challengesBeforeStream += 1
   def incDisconnects = disconnectsBeforeStream += 1
+  var liftingMessages = 0
+
+  var swap = MutableList[Long]()
 
   def updateCurrentPackage = currentPackage += 1
 
@@ -109,6 +112,16 @@ class Oracle extends AddNode {
     }
 
   def getLinkable(nid: Int): Link = getLinkable(getNode(nid))
+
+  def getNodeOption(id: Int): Option[Usernode] = {
+    try {
+      Network.get(id) match {
+        case un: Usernode => Some(un)
+      }
+    } catch {
+      case e => None
+    }
+  }
 
   def getNode(id: Int): Usernode = {
     Network.get(id) match {

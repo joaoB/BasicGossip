@@ -15,7 +15,7 @@ class AltruisticProtocol(name: String) extends Lightweight(name) {
   override val protocolName = ProtocolName.ALT
   override val baseWin = Oracle.MIN_WIN_TO_SEARCH
   override val maxWin = Oracle.MAX_WIN
-  override val disseminator: Disseminator = LiftingDisseminator//AltruisticDisseminator
+  override val disseminator: Disseminator = AltruisticDisseminator
 
   override def shouldLookForNewNeighbor(un: Usernode): Boolean = {
     un.scoreList.size < Oracle.MIN_WIN_TO_SEARCH

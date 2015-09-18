@@ -1,20 +1,22 @@
 package basicGossip.oracle
 
 import scala.util.Random
+
 import basicGossip.node.Usernode
 import basicGossip.protocols.AltruisticProtocol
 import basicGossip.protocols.FRProtocol
 import basicGossip.protocols.GeneralProtocol.GeneralProtocol
+import basicGossip.protocols.GeneralProtocol.H
+import basicGossip.protocols.GeneralProtocol.Heavyweight
 import basicGossip.protocols.GeneralProtocol.ProtocolName
+import basicGossip.protocols.Lifting.Lifting
+import basicGossip.protocols.Lifting.LiftingFreeRider
+import basicGossip.protocols.Lifting.LiftingRational
 import basicGossip.protocols.RationalProtocol
+import basicGossip.protocols.dissemination.FreeRider
 import hyparview.MyHyParView
 import peersim.config.Configuration
 import peersim.core.Network
-import basicGossip.protocols.Lifting.Lifting
-import basicGossip.protocols.dissemination.FreeRider
-import basicGossip.protocols.Lifting.LiftingFreeRider
-import basicGossip.protocols.Lifting.LiftingRational
-import basicGossip.protocols.GeneralProtocol.Heavyweight
 
 protected abstract class AddNode extends AllNodes {
 
@@ -41,7 +43,7 @@ protected abstract class AddNode extends AllNodes {
   }
 
   def addAltruisticNode = {
-    val node = addNodeAux(new Lifting("Altruistic"))
+    val node = addNodeAux(new AltruisticProtocol("Altruistic"))
     altruistics = allNodesExceptStreamer.filter(_.behaviorProtocol.protocolName == ProtocolName.ALT).map(_.getID.toInt)
   }
 
@@ -54,21 +56,14 @@ protected abstract class AddNode extends AllNodes {
   }
 
   def injectFreeRiders = {
-    val amount = 30
-    val fr = Random.shuffle((1 until Network.size).toList).take(amount)
+    val amount = 300
+    val fr = Random.shuffle((3 until Network.size).toList).take(amount)
     allNodesExceptStreamer filter (node => fr.contains(node.getID)) map {
       x =>
-        x.setProtocol(0, new LiftingRational("free rider injected"))
+        x.setProtocol(0, new FRProtocol("free rider injected"))
+        //H.setManagers(x)
 
-        try {
-          x.behaviorProtocol match {
-            case prot: Heavyweight =>
-              prot.setManagers(x)
-            case _ =>
-          }
-        } catch { case e => }
-
-      //x.dropConnections
+      x.dropConnections
     }
     altruistics = allNodesExceptStreamer.filter(_.behaviorProtocol.protocolName == ProtocolName.ALT).map(_.getID.toInt)
     freeRiders = allNodesExceptStreamer.filter(_.behaviorProtocol.protocolName == ProtocolName.FR).map(_.getID.toInt)

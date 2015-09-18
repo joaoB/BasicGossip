@@ -11,15 +11,15 @@ Oracle.QUARANTINE 220
 Oracle.RACIONAL_MAX_CONNECTIONS 7
 
 Usernode.SCORE_DELTA 1
-Oracle.FR_THRESHOLD -150
+Oracle.FR_THRESHOLD -300
 Oracle.FR_PERCENTAGE 0
 
-Oracle.FORWARD_PROBABILITY 0.5
+Oracle.FORWARD_PROBABILITY 1
 Oracle.REDUNDANCY_FACTOR 0
 Oracle.BASE_RANK 0
 # parameters of periodic execution
-
 CYCLES 20000
+
 CYCLE SIZE*10000
 
 # parameters of message transfer

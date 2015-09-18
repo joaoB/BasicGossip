@@ -72,10 +72,11 @@ trait GeneralProtocol extends CDProtocol with EDProtocol with ScoreListManager {
         id =>
           Oracle.getNode(id.toInt) match {
             case peern if peern.isUp =>
-              //println(peern.proposals)
-              if (!peern.messageList.contains(info.value))
+             if (!peern.messageList.contains(info.value) && !peern.waiting(info.value)){
                 //peern.newProposal(Info(info.value, node, info.hop + 1))
+                peern.waiting.+=(info.value)
                 sendInfo(node, peern, Info(info.value, node, info.hop + 1), pid)
+              }
             case _ =>
           }
       }

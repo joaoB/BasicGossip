@@ -21,6 +21,11 @@ class MyHyParView {
     def joinAux(node: Usernode, connector: Usernode, lenght: Int) {
       lenght match {
         case n if n == 0 => disconnectOneAcceptOther(node, connector)
+        case _ if connector.getID == 1 => 
+          Oracle.getNodeOption(2) match {
+            case Some(elem) => joinAux(node, elem, lenght - 1)
+            case None =>
+          }            
         case _ =>
           if (canConnect(node, connector)) {
             connector.newNodeSolving(node.getID.toInt) //injects waiting

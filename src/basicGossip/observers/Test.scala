@@ -20,19 +20,57 @@ class Test(name: String) extends Control {
     //cycle
     //frLess
     //actives
-    s
+    //s
+    //currentPackage
+
+    //hops
+    //frs
+
+    waitAttack
     false
   }
+
+  def waitAttack = {
+    try {
+      val a = Oracle.getNode(2).scoreList
+      val actives = a.filter(p => p._2.status == NodeStatus.ACTIVE).size
+      val activesNoFrs = a.filter(p => p._2.status == NodeStatus.ACTIVE && !Oracle.freeRiders.contains(p._1) ).size
+      println(Oracle.currentPackage + " --> " + actives + " ...  " + activesNoFrs)
+    } catch {
+      case e =>
+    }
+  }
+
+  def frs = {
+    println(Oracle.currentPackage + " --> " + Oracle.badKicked.size)
+  }
+
+  def hops = {
+    val a = Oracle.altruistics.map({
+      id => (id, Oracle.getNode(id).avgHops)
+    }).filter { elem => elem._2 > 5.5 }
+
+    a map {
+      elem =>
+        if (!Oracle.swap.contains(elem._1))
+          Oracle.swap += elem._1
+    }
+
+    println(Oracle.currentPackage + " --> " + Oracle.swap.size)
+
+  }
+
+  def currentPackage = println(Oracle.currentPackage)
 
   def s = {
 
     try {
       //for (id <- 1 until 3) {
       val id = 1
-        //println(Oracle.currentPackage + ": " + " Node: " + id + " -> " + Oracle.getNode(id).avgHops)
+      println(Oracle.getNode(id).scoreList.filter(_._2.status == NodeStatus.ACTIVE).map { x => (x._1, x._2.score) }.head)
       //}
 
-      println(Oracle.currentPackage + ": " + Oracle.badKicked.size + " -> " + Oracle.altruisticsAmountOfSentMessages)
+      //println(Oracle.currentPackage + ": " + Oracle.kicked.size + " -> " + Oracle.altruisticsAmountOfSentMessages)
     } catch {
       case e =>
     }

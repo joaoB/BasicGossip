@@ -25,20 +25,23 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
   override def nextCycle(node: Node, pid: Int): Unit = {
 
-    if (Network.size < 100) {
+    if (Network.size < 1000) {
       Oracle.addAltruisticNode
-    } else if (Oracle.currentPackage == 100) {
-      Oracle.allNodesExceptStreamer map {
-        node =>
-          node.behaviorProtocol match {
-            case h: Heavyweight => h.setManagers(node)
-            case _ =>
-          }
-      }
     }
+    //else if (Oracle.currentPackage == 100) {
+    //      Oracle.allNodesExceptStreamer map {
+    //        node =>
+    //          node.behaviorProtocol match {
+    //            case h: Heavyweight => h.setManagers(node)
+    //            case _ =>
+    //          }
+    //      }
+    //    }
 
-    if (Oracle.currentPackage == 999) {
-      Oracle.injectFreeRiders
+    if (Oracle.currentPackage == 6999) { Oracle.injectFreeRiders }
+
+    if (Oracle.currentPackage == 6999) {
+      Oracle.getNode(2).setProtocol(0, new WaitConnectionsAttack("WaitConnectionsAttack"))
     }
 
     for (id <- 1 until Network.size) {

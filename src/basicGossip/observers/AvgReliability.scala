@@ -20,6 +20,8 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     altruisticReliability
     freeriderReliability
 
+    
+    //liftingMessages
     //managers
 
     //dumpFreeRiders
@@ -35,17 +37,33 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //d
     //altReliLastRounds
     //falsePos
+    
     //printScore
+    
     //disconnects
     //isolatedNodes
     //maxmin
 
     //    aalt
     //    afr
-    //    hopsNavg
+      //hopsNavg
+    
+    swap
     false
   }
 
+  
+  def swap = {
+    val a = Oracle.altruistics.map ({
+      id => Oracle.getNode(id).avgHops
+    }).count { hop => hop > 5}
+    println("SWAPERS: "  + a)
+  }
+  
+  def liftingMessages = {
+    println("ORACLE LIFTING MESSAGES " + Oracle.liftingMessages)
+  }
+  
   def managers = {
     println(Oracle.freeRiders)
     Oracle.allNodesExceptStreamer map {
@@ -587,7 +605,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       val altHops = (Oracle.altruistics map {
         id => Oracle.getNode(id)
       }).map(_.avgHops)
-      println(" ALT above 5.3 -> " + altHops.count(_ > 5.3))
+      println(" ALT above 5.3 -> " + altHops.count(_ > 5))
       println(" ALT hopinha max " + altHops.max)
       println(" ALT hopinha min " + altHops.min)
       println("above 5.3 -> " + hopinha.count(_ > 5.3))
