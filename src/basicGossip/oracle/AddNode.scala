@@ -1,7 +1,6 @@
 package basicGossip.oracle
 
 import scala.util.Random
-
 import basicGossip.node.Usernode
 import basicGossip.protocols.AltruisticProtocol
 import basicGossip.protocols.FRProtocol
@@ -17,6 +16,7 @@ import basicGossip.protocols.dissemination.FreeRider
 import hyparview.MyHyParView
 import peersim.config.Configuration
 import peersim.core.Network
+import basicGossip.protocols.RationalProtocol
 
 protected abstract class AddNode extends AllNodes {
 
@@ -60,7 +60,7 @@ protected abstract class AddNode extends AllNodes {
     val fr = Random.shuffle((3 until Network.size).toList).take(amount)
     allNodesExceptStreamer filter (node => fr.contains(node.getID)) map {
       x =>
-        x.setProtocol(0, new FRProtocol("free rider injected"))
+        x.setProtocol(0, new RationalProtocol("free rider injected"))
         //H.setManagers(x)
 
       x.dropConnections

@@ -23,10 +23,10 @@ class Test(name: String) extends Control {
     //s
     //currentPackage
 
-    //hops
+    hops
     //frs
 
-    waitAttack
+    //waitAttack
     false
   }
 
@@ -34,7 +34,7 @@ class Test(name: String) extends Control {
     try {
       val a = Oracle.getNode(2).scoreList
       val actives = a.filter(p => p._2.status == NodeStatus.ACTIVE).size
-      val activesNoFrs = a.filter(p => p._2.status == NodeStatus.ACTIVE && !Oracle.freeRiders.contains(p._1) ).size
+      val activesNoFrs = a.filter(p => p._2.status == NodeStatus.ACTIVE && !Oracle.freeRiders.contains(p._1)).size
       println(Oracle.currentPackage + " --> " + actives + " ...  " + activesNoFrs)
     } catch {
       case e =>
@@ -46,17 +46,27 @@ class Test(name: String) extends Control {
   }
 
   def hops = {
-    val a = Oracle.altruistics.map({
-      id => (id, Oracle.getNode(id).avgHops)
-    }).filter { elem => elem._2 > 5.5 }
+    println(Oracle.currentPackage); /*
+    /*
+    * 
+    */
+        val a = Oracle.altruistics.map({
+          id => (id, Oracle.getNode(id).avgHops)
+        }).filter { elem => elem._2 > 5 }
+    
+        a map {
+          elem =>
+            if (!Oracle.swap.contains(elem._1))
+              Oracle.swap += elem._1
+        }
+    
+        println(Oracle.currentPackage + " --> " + Oracle.swap.size.toFloat / Oracle.altruistics.size)*/
 
-    a map {
-      elem =>
-        if (!Oracle.swap.contains(elem._1))
-          Oracle.swap += elem._1
-    }
-
-    println(Oracle.currentPackage + " --> " + Oracle.swap.size)
+//    val a = Oracle.altruistics.map {
+//      id => Oracle.getNode(id).avgHops
+//    }
+//    val b = a.sum.toFloat / a.size
+//    println(Oracle.currentPackage + "  --  " + b)
 
   }
 

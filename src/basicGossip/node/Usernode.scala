@@ -34,6 +34,9 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   var newMessages = 0
   var repeatedMessages = 0
 
+  var sentMessages = 0
+  
+  
   var waiting = BitSet()
   
   var ring: RingBuffer[Double] = new RingBuffer(20)
@@ -108,7 +111,7 @@ class Usernode(prefix: String) extends ModifiableNode(prefix) {
   def cleanSolvedChallenges = solvingChallenges = solvingChallenges.filterNot(_._2 <= 0)
 
   def updateAvg(info: Info) = {
-    ring.+=(ring.next * 0.8 + info.hop * 0.2)
+    ring.+=(ring.next * 0.7 + info.hop * 0.3)
   }
 
   def saveMessage(info: Info) = {

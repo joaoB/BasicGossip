@@ -18,8 +18,22 @@ abstract class Disseminator {
     Oracle.forwardProbability > Random.nextFloat
   }
 
+  
+  
   def belowBaseRank(score: Float): Boolean = {
-    val calced = Oracle.forwardProbability * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
+    val calced = Oracle.rationalBFP * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
+    calced > Random.nextFloat
+  }
+  
+  
+    def aboveBaseRankRational: Boolean = {
+    Oracle.rationalBFP > Random.nextFloat
+  }
+
+  
+  
+  def belowBaseRankRational(score: Float): Boolean = {
+    val calced = Oracle.rationalBFP * Math.abs((-Oracle.FR_THRESHOLD - (-score)) / Oracle.FR_THRESHOLD)
     calced > Random.nextFloat
   }
 

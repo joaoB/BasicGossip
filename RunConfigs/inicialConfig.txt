@@ -1,5 +1,6 @@
 # network size
 SIZE 1
+#fanout do streamer
 Oracle.FANOUT 7
 
 Oracle.MIN_WINDOW_TO_SEARCH 12
@@ -7,14 +8,24 @@ Oracle.MAX_WIN 15
 
 Oracle.MAX_HOPS 30
 
-Oracle.QUARANTINE 220
-Oracle.RACIONAL_MAX_CONNECTIONS 7
+Oracle.QUARANTINE 20
+
+#max connections e base view
+Oracle.RACIONAL_MAX_CONNECTIONS 16
+
+#last rounds to print
+LAST.ROUNDS.TO.PRINT 1000
 
 Usernode.SCORE_DELTA 1
-Oracle.FR_THRESHOLD -300
+Oracle.FR_THRESHOLD -15
 Oracle.FR_PERCENTAGE 0
 
-Oracle.FORWARD_PROBABILITY 1
+#altruistas
+Oracle.FORWARD_PROBABILITY 0.4
+
+#racionais
+Oracle.RATIONAL_BFP 0.4
+
 Oracle.REDUNDANCY_FACTOR 0
 Oracle.BASE_RANK 0
 # parameters of periodic execution

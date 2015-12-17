@@ -24,6 +24,8 @@ class Oracle extends AddNode {
   val redundancyFactor = Configuration.getDouble("Oracle.REDUNDANCY_FACTOR")
   val baseRank = Configuration.getDouble("Oracle.BASE_RANK")
   val forwardProbability = Configuration.getDouble("Oracle.FORWARD_PROBABILITY")
+  val rationalBFP = Configuration.getDouble("Oracle.RATIONAL_BFP")
+  
   val FR_THRESHOLD = Configuration.getInt("Oracle.FR_THRESHOLD")
   val MIN_WIN_TO_SEARCH = Configuration.getInt("Oracle.MIN_WINDOW_TO_SEARCH")
   val QUARANTINE = Configuration.getInt("Oracle.QUARANTINE")
@@ -91,7 +93,7 @@ class Oracle extends AddNode {
     }
 
   def incSentMessages(un: Usernode) =
-    //if (currentPackage > 5000)
+    if (currentPackage > 6999)
     if (!Oracle.freeRiders.contains(un.getID)) {
       altruisticsAmountOfSentMessages += 1
     } else {

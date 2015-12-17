@@ -9,6 +9,7 @@ import basicGossip.protocols.Link
 import basicGossip.oracle.Oracle
 import basicGossip.node.NodeStatus
 import basicGossip.protocols.GeneralProtocol.Heavyweight
+import peersim.config.Configuration
 
 class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
@@ -20,7 +21,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     altruisticReliability
     freeriderReliability
 
-    
+    //msgNum
     //liftingMessages
     //managers
 
@@ -37,33 +38,50 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //d
     //altReliLastRounds
     //falsePos
-    
+
     //printScore
-    
+
     //disconnects
     //isolatedNodes
     //maxmin
 
     //    aalt
     //    afr
-      //hopsNavg
-    
-    swap
+    //hopsNavg
+
+    //swap
     false
   }
 
-  
-  def swap = {
-    val a = Oracle.altruistics.map ({
-      id => Oracle.getNode(id).avgHops
-    }).count { hop => hop > 5}
-    println("SWAPERS: "  + a)
+  def msgNum {
+    val altruisticMessages = Oracle.altruistics map {
+      id =>
+        val node = Oracle.getNode(id)
+        node.repeatedMessages + node.newMessages
+    }
+    if (altruisticMessages.size > 0)
+      println("alt messages = " + altruisticMessages.sum / altruisticMessages.size)
+
+    val frMessages = Oracle.freeRiders map {
+      id =>
+        val node = Oracle.getNode(id)
+        node.repeatedMessages + node.newMessages
+    }
+    if (frMessages.size > 0)
+      println("frMessages messages = " + frMessages.sum / frMessages.size)
   }
-  
+
+  def swap = {
+    val a = Oracle.altruistics.map({
+      id => Oracle.getNode(id).avgHops
+    }).count { hop => hop > 5 }
+    println("SWAPERS: " + a)
+  }
+
   def liftingMessages = {
     println("ORACLE LIFTING MESSAGES " + Oracle.liftingMessages)
   }
-  
+
   def managers = {
     println(Oracle.freeRiders)
     Oracle.allNodesExceptStreamer map {
@@ -595,12 +613,14 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
   }
 
+  val LAST_ROUNDS = Configuration.getInt("LAST.ROUNDS.TO.PRINT")
+
   def altruisticReliability = {
 
-    val repeated = Oracle.allNodesExceptStreamer map (_.repeatedMessages)
-    println("repeated: " + repeated.sum)
+    // val repeated = Oracle.allNodesExceptStreamer map (_.repeatedMessages)
+    // println("repeated: " + repeated.sum)
 
-    try {
+    /* try {
       val hopinha = Oracle.allNodesExceptStreamer map (_.avgHops)
       val altHops = (Oracle.altruistics map {
         id => Oracle.getNode(id)
@@ -633,7 +653,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 
     println("MAX HOPS " + Oracle.maxHopInfo)
     println("puzzles AFTER FREERIDERS: " + Oracle.altruisticChallanges)
-
+*/
     val percentages = Oracle.altruistics map {
       id =>
         //    (Oracle.getNode(id).messageList.count(_.isDefined)).toFloat / BasicGossip.cycles
@@ -647,14 +667,14 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     }
 
     val last = Oracle.altruistics map {
-      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 500).size.toFloat / 500
+      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - LAST_ROUNDS).size.toFloat / LAST_ROUNDS
     }
 
-    println("false positives : " + Oracle.badKicked.size)
+    /*println("false positives : " + Oracle.badKicked.size)
     println("false positives 2: " + Oracle.badKicked.filter(_._2 > 1).size)
-    println("num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))
+    println("num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))*/
 
-    println("Reliability1: " + percentages.sum / percentages.size)
+    println("Fiabilidade altruistas desde inicio da stream: " + percentages.sum / percentages.size)
 
     //    println("Reliability of altruistics (0 - 10%): " + percentages.filter(x => x >= 0 && x < 0.1).size.toFloat / Oracle.altruistics.size)
     //    println("Reliability of altruistics (10 - 20%): " + percentages.filter(x => x >= 0.1 && x < 0.2).size.toFloat / Oracle.altruistics.size)
@@ -683,15 +703,15 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
     //    println("Reliability of altruistics (80 - 90%) LAST: " + last.filter(x => x >= 0.8 && x < 0.9).size.toFloat / Oracle.altruistics.size)
     //    println("Reliability of altruistics (90 - 100%) LAST: " + last.filter(x => x >= 0.9 && x <= 1).size.toFloat / Oracle.altruistics.size)
 
-    println("Reliability of altruistics (>0.90%): (last 500 rounds)" + last.filter(_ > 0.9).size.toFloat / Oracle.altruistics.size)
-    println("Reliability of altruistics (>0.95%): (last 500 rounds)" + last.filter(_ > 0.95).size.toFloat / Oracle.altruistics.size)
-    println("Reliability of altruistics (>0.98%): (last 500 rounds)" + last.filter(_ > 0.98).size.toFloat / Oracle.altruistics.size)
+    println("Reliability of altruistics (>0.90%): (last " + LAST_ROUNDS + " rounds)" + last.filter(_ > 0.9).size.toFloat / Oracle.altruistics.size)
+    println("Reliability of altruistics (>0.95%): (last " + LAST_ROUNDS + " rounds)" + last.filter(_ > 0.95).size.toFloat / Oracle.altruistics.size)
+    println("Reliability of altruistics (>0.98%): (last " + LAST_ROUNDS + " rounds)" + last.filter(_ > 0.98).size.toFloat / Oracle.altruistics.size)
 
     println("messages # " + Oracle.altruisticsAmountOfSentMessages)
   }
 
   def freeriderReliability = {
-    println("    num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))
+    //println("    num of ninja riders " + (Oracle.frAmount - Oracle.kicked.size))
 
     val percentages = Oracle.freeRiders map {
       x => Oracle.getNode(x).messageList.size.toFloat / BasicGossip.cycles
@@ -740,12 +760,12 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
 */
 
     val last = Oracle.freeRiders map {
-      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - 500).size.toFloat / 500
+      id => Oracle.getNode(id).messageList.filter(_ >= BasicGossip.cycles - LAST_ROUNDS).size.toFloat / LAST_ROUNDS
     }
     println("GLBAL FR" + last.sum.toFloat / last.size)
-    println("Reliability of FR (>0.90%): (last 500 rounds)" + last.filter(_ > 0.9).size.toFloat / Oracle.freeRiders.size)
-    println("Reliability of FR (>0.95%): (last 500 rounds)" + last.filter(_ > 0.95).size.toFloat / Oracle.freeRiders.size)
-    println("Reliability of FR (>0.98%): (last 500 rounds)" + last.filter(_ > 0.98).size.toFloat / Oracle.freeRiders.size)
+    println("Reliability of FR (>0.90%): (last " + LAST_ROUNDS + " rounds)" + last.filter(_ > 0.9).size.toFloat / Oracle.freeRiders.size)
+    println("Reliability of FR (>0.95%): (last " + LAST_ROUNDS + " rounds)" + last.filter(_ > 0.95).size.toFloat / Oracle.freeRiders.size)
+    println("Reliability of FR (>0.98%): (last " + LAST_ROUNDS + " rounds)" + last.filter(_ > 0.98).size.toFloat / Oracle.freeRiders.size)
 
     println("Amounf of messages: " + Oracle.altruisticsAmountOfSentMessages + Oracle.frAmountOfSentMessages)
 
@@ -756,9 +776,9 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       println("Avg FR Message #: " + Oracle.frAmountOfSentMessages / Oracle.frAmount)
     }
 
-    println("ALT PUZZLES " + Oracle.altruisticChallanges)
+    //println("ALT PUZZLES " + Oracle.altruisticChallanges)
 
-    println("FR PUZZLES " + Oracle.FRchallenges)
+    // println("FR PUZZLES " + Oracle.FRchallenges)
 
   }
 
@@ -855,7 +875,7 @@ class AvgReliability(name: String) extends BasicGossipObserver(name) {
       case node if !node.dumpFreeRiders.isEmpty => 
         print("Node " + node.getID + "-> ")
         node.dumpFreeRiders map {
-          x => print(x + " ")))
+          x => print(x + " "))))
         }
         println
       case _ =>

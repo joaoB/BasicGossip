@@ -40,9 +40,9 @@ class BasicGossip(prefix: String) extends SingleValueHolder(prefix) with CDProto
 
     if (Oracle.currentPackage == 6999) { Oracle.injectFreeRiders }
 
-    if (Oracle.currentPackage == 6999) {
-      Oracle.getNode(2).setProtocol(0, new WaitConnectionsAttack("WaitConnectionsAttack"))
-    }
+    //if (Oracle.currentPackage == 3) {
+     // Oracle.getNode(2).setProtocol(0, new WaitConnectionsAttack("WaitConnectionsAttack"))
+    //}
 
     for (id <- 1 until Network.size) {
       val node = Oracle.getNode(id)
